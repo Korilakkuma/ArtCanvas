@@ -87,5 +87,5 @@ This file is sample code by using "ArtCanvas.js".
   
 The application that uses this library is in the following URL .  
   
-[http://curtaincall.myhome.cx/portfolio-instant-canvas-presentation/](http://curtaincall.myhome.cx/portfolio-instant-canvas-presentation/ "Instant Canvas Presentation")  
+[http://curtaincall.weblike.jp/portfolio-instant-canvas-presentation/](http://curtaincall.weblike.jp/portfolio-instant-canvas-presentation/ "Instant Canvas Presentation")  
   
