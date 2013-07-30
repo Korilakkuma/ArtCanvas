@@ -1,7 +1,7 @@
 ArtCanvas
 =========
 
-HTML 5 Canvas Library
+HTML5 Canvas Library
 
 # Overview
   
