@@ -1,0 +1,58 @@
+@charset "UTF-8";
+/*
+ *
+ * reset.css
+ *
+ * This CSS modifies default style that browsers define.
+ * In concrete, margin and padding are changed to 0 pixel,
+ * and new elements that added in HTML5 are changed to block-level elements..etc.
+ *
+ * Copyright 2014@Tomohiro IKEDA
+ *
+ */
+ 
+ 
+ 
+html, body, div,
+h1, h2, h3, h4, h5, h6,
+p, ul, ol, dl, dt, dd,
+table, th, td,
+form, fieldset,
+header, hgroup, section, article, aside, hgroup, footer, figure,
+figcaption, nav {
+    margin:0px;
+    padding:0px;
+}
+
+html {
+    overflow:scroll;
+    overflow:-moz-scrollbars-vertical;
+    overflow-x:scroll;
+}
+
+article, aside, canvas, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section, summary {
+    display:block;
+}
+
+ul, ol {
+    list-style:none;
+}
+
+p, li, dt, dd, th, td, pre {
+    -ms-line-break:strict;
+        line-break:strict;
+    -ms-word-break:break-strict;
+        word-break:break-strict;
+}
+
+table {
+    border-collapse:collapse;
+    border-spacing:0px;
+}
+
+img {
+    max-width:100%;
+    border:none;
+    vertical-align:middle;
+}
