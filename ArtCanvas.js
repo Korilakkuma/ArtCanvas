@@ -1,1061 +1,1312 @@
-/** 
- * ArtCanvas.js
- * @fileoverview HTML5 Canvas Library for drawing
- *
- * Copyright 2012, 2013@Tomohiro IKEDA
- * Released under the MIT license
- */
- 
- 
- 
-var ArtCanvas = function(canvasID, containerID, historySize, initCallback){
-    var canvas  = null;
-    var context = null;
+(function(global) {
 
-    if (Object.prototype.toString.call(canvasID) === '[object String]') {
-        var canvas = document.getElementById(canvasID);
-
-        if (canvas instanceof HTMLCanvasElement) {
-            context = canvas.getContext('2d');
-            context.clearRect(0, 0, canvas.width, canvas.height);  //Initialization
-        } else {
-            throw new Error('ArtCanvas : The designated canvas node ("' + canvasID + '") does not exists !!');
-        }
-    } else {
-        throw new Error('ArtCanvas : The 1st argument is canvas node ID !!');
-    }
-
-    var container = null;
-
-    if (Object.prototype.toString.call(containerID) === '[object String]') {
-        container = document.getElementById(containerID);
-    }
-
-    var figureType = 'stroke-rect';  //for drawing figure
-    var text       = '';             //for drawing text
-    var toolType   = 'dropper';      //for Tool mode
-
-    //for mousemove event
-    var isMouse = false;
-
-    //for manage application mode
-    var flags = {
-      illust : true,
-      figure : false,
-      text   : false,
-      tool   : false,
-      eraser : false
-    };
-
-    //Starting points (The origin is left-top in canvas)
-    var points = {
-      x1 : 0,
-      y1 : 0,
-      x2 : 0,
-      y2 : 0
-    };
-
-    //Color object (for gradient and droppper)
-    var rgbs = {
-      r : 0,
-      g : 0,
-      b : 0
-    };
-
-    if (Object.prototype.toString(initCallback) === '[object Function]') {
-        initCallback(context);
-    } else {
-        context.lineJoin    = 'miter';
-        context.lineCap     = 'butt';
-        context.lineWidth   = 1;
-        context.globalAlpha = 1;
-        context.shadowBlur  = 0;
-        context.strokeStyle = 'rgba(0, 0, 0, 1.0)';
-        context.fillStyle   = 'rgba(0, 0, 0, 1.0)';
-        context.shadowColor = 'rgba(0, 0, 0, 1.0)';
-        context.font        = '24px "Arial"';
-    }
-
-    var size = parseInt(historySize);
-
-    if (size < 1) {
-        size = 100;
-    }
-
-    //Private methods
-    var _getPoint = function(where){
-        return points[where];
-    };
-
-    var _setPoint = function(where, value){
-        points[where] = value;
-    };
-
-    var _isPoints = function(dimension){
-        switch (dimension) {
-            case 1  : return (points.x1 && points.y1);
-            case 2  : return (points.x1 && points.y1 && points.x2 && points.y2);
-            default : return;
-        }
-    };
-
-    var _clearPoints = function(){
-        points.x1 = points.y1 = points.x2 = points.y2 = 0;
-    };
-
-    var _getX = function(event){
-        if (event.pageX) {
-            //Desktop
-        } else if (event.touches[0]) {
-            event = event.touches[0];         //Smartphone
-        } else if (event.changedTouches[0]) {
-            event = event.changedTouches[0];  //Smartphone
-        }
-
-        var scrollLeft = (container === null) ? 0 : container.scrollLeft;
-
-        return event.pageX - canvas.offsetLeft + scrollLeft;
-    };
-
-    var _getY = function(event){
-        if (event.pageY) {
-            //Desktop
-        } else if (event.touches[0]) {
-            event = event.touches[0];         //Smartphone
-        } else if (event.changedTouches[0]) {
-            event = event.changedTouches[0];  //Smartphone
-        }
-
-        var scrollTop = (container === null) ? 0 : container.scrollTop;
-
-        return event.pageY - canvas.offsetTop + scrollTop;
-    };
-
-    var _drawIllust = function(x, y){
-        if (!flags.illust) {
+    var freeze = function(object) {
+        if (!(Object.freeze && (Object.prototype.toString.call(object[key]) === '[object Object]'))) {
             return;
         }
 
-        context.beginPath();
-        context.moveTo(points.x1, points.y1);  //Starting points
-        context.lineTo(x, y);                  //Ending points
-        context.stroke();                      //Draw illust
-        points.x1 = x;
-        points.y1 = y;
+        Object.freeze(object);
+
+        for (var key in object) {
+            if (Object.prototype.toString.call(object[key]) === '[object Object]') {
+                freeze(object[key]);
+            }
+        }
     };
 
-    var _drawFigure = function(x, y){
-        if (!flags.figure) {
-            return;
+    function ArtCanvas(container, canvas, width, height, callbacks) {
+        this.container = document.body;
+
+        if (container instanceof HTMLElement) {
+            this.container = container;
         }
 
-        //Get figure width, height, and start points
-        var width  = Math.abs(x - points.x1);
-        var height = Math.abs(y - points.y1);
-        var minX   = Math.min(x, points.x1);
-        var minY   = Math.min(y, points.y1);
-        var maxX   = Math.max(x, points.x1);
-        var maxY   = Math.max(y, points.y1);
+        this.container.style.position = 'relative';
+        this.container.style.top      = '0px';
+        this.container.style.left     = '0px';
+        this.container.style.zIndex   = 1;
 
-        //Draw figure
-        switch (figureType) {
-            case 'rect' :
-                context.beginPath();
-                context.rect(minX, minY, width, height);
-                context.stroke();
-                context.fill();
+        var w = parseInt(width);
+        var h = parseInt(height);
 
+        this.container.style.width  = (w > 0) ? (w + 'px') : (ArtCanvas.DEFAULT_SIZES.WIDTH  + 'px');
+        this.container.style.height = (h > 0) ? (h + 'px') : (ArtCanvas.DEFAULT_SIZES.HEIGHT + 'px');
+
+        this.mode      = ArtCanvas.Mode.HAND;
+        this.figure    = ArtCanvas.Figure.RECTANGLE;
+        this.transform = ArtCanvas.Transform.TRANSLATE;
+
+        this.layers = [];
+        this.layers.push(new ArtCanvas.Canvas(this.container, canvas, width, height, (this.layers.length + 2)));
+
+        this.activeLayer = 0;
+
+        this.callbacks = {
+            drawstart   : function() {},
+            drawmove    : function() {},
+            drawend     : function() {},
+            changemode  : function() {},
+            selectlayer : function() {},
+            showlayer   : function() {},
+            hidelayer   : function() {},
+            addlayer    : function() {},
+            removelayer : function() {}
+        };
+
+        this.setCallbacks(callbacks);
+
+        var imagedata = null;
+        var isDown    = false;
+        var self      = this;
+
+        var _figure = function(activeCanvas, activeContext, x, y, event) {
+            if (/mousedown|touchstart/i.test(event)) {
+                var canvasElement = activeCanvas.getCanvas();
+                var width         = canvasElement.width;
+                var height        = canvasElement.height;
+                imagedata         = activeContext.getImageData(0, 0, width, height);
+
+                return;
+            }
+
+            var points = activeCanvas.paths.pop();
+            var point  = points.pop();
+
+            points.push(point);
+            activeCanvas.paths.push(points);
+
+            activeContext.putImageData(imagedata, 0, 0);
+
+            switch (self.figure) {
+                case ArtCanvas.Figure.RECTANGLE :
+                    var left   = point.getX();
+                    var top    = point.getY();
+                    var offset = ArtCanvas.Point.getOffsetPoint(point, new ArtCanvas.Point(x, y));
+
+                    activeContext.beginPath();
+                    activeContext.rect(left, top, offset.getX(), offset.getY());
+                    activeContext.stroke();
+                    activeContext.fill();
+
+                    if (/mouseup|touchend/i.test(event)) {
+                        activeCanvas.paths.pop();
+                        activeCanvas.paths.push(new ArtCanvas.Rectangle(left, top, offset.getX(), offset.getY()));
+                    }
+
+                    break;
+                case ArtCanvas.Figure.CIRCLE :
+                    var centerX = point.getX();
+                    var centerY = point.getY();
+                    var radius  = ArtCanvas.Point.getDistance(point, new ArtCanvas.Point(x, y));
+
+                    activeContext.beginPath();
+                    activeContext.arc(centerX, centerY, radius, 0, (2 * Math.PI), false);
+                    activeContext.stroke();
+                    activeContext.fill();
+
+                    if (/mouseup|touchend/i.test(event)) {
+                        activeCanvas.paths.pop();
+                        activeCanvas.paths.push(new ArtCanvas.Circle(centerX, centerY, radius, 0, (2 * Math.PI), false));
+                    }
+
+                    break;
+                case ArtCanvas.Figure.LINE :
+                    activeContext.beginPath();
+                    activeContext.moveTo(point.getX(), point.getY());
+                    activeContext.lineTo(x, y);
+                    activeContext.stroke();
+
+                    if (/mouseup|touchend/i.test(event)) {
+                        activeCanvas.paths.pop();
+                        activeCanvas.paths.push(new ArtCanvas.Line(point, new ArtCanvas.Point(x, y)));
+                    }
+
+                    break;
+                default :
+                    break;
+            }
+        };
+
+        var _transform = function(activeCanvas, x, y) {
+            var points = activeCanvas.paths.pop();
+            var point  = points.pop();
+            var offset = ArtCanvas.Point.getOffsetPoint(point, new ArtCanvas.Point(x, y));
+
+            var amounts = [];
+
+            switch (self.transform) {
+                case ArtCanvas.Transform.TRANSLATE :
+                    amounts.push(offset.getX());
+                    amounts.push(offset.getY());
+                    break;
+                case ArtCanvas.Transform.SCALE :
+                    var canvas = activeCanvas.getCanvas();
+
+                    var scaleX = 1;
+                    var scaleY = 1;
+
+                    var offsetX = offset.getX();
+                    var offsetY = offset.getY();
+
+                    if (offsetX !== 0) {scaleX += (offsetX / canvas.width);}
+                    if (offsetY !== 0) {scaleY += (offsetY / canvas.height);}
+
+                    amounts.push(scaleX);
+                    amounts.push(scaleY);
+                    break;
+                case ArtCanvas.Transform.ROTATE :
+                    var radian = Math.atan2(offset.getY(), offset.getX());
+                    var degree = (radian / Math.PI) * 180;
+
+                    amounts.push(degree);
+                    break;
+                default :
+                    break;
+            }
+
+            activeCanvas.transform(self.transform, amounts);
+
+            points.push(point);
+            activeCanvas.paths.push(points);
+        };
+
+        this.container.addEventListener(ArtCanvas.MouseEvents.START, function(event) {
+            var activeCanvas  = self.layers[self.activeLayer];
+            var activeContext = activeCanvas.getContext();
+
+            var x = activeCanvas.getOffsetX(event);
+            var y = activeCanvas.getOffsetY(event);
+
+            switch (self.mode) {
+                case ArtCanvas.Mode.HAND :
+                    activeContext.beginPath();
+                    activeContext.moveTo(x, y);
+                    break;
+                case ArtCanvas.Mode.FIGURE :
+                    _figure(activeCanvas, activeContext, x, y, event.type);
+                    break;
+                case ArtCanvas.Mode.TEXT :
+                    activeCanvas.createTextbox(new ArtCanvas.Point(x, y));
+                    return;
+                case ArtCanvas.Mode.TRANSFORM :
+                    break;
+                default :
+                    break;
+            }
+
+            activeCanvas.paths.push([new ArtCanvas.Point(x, y)]);
+
+            isDown = true;
+
+            self.callbacks.drawstart(activeCanvas, activeContext, x, y);
+        }, true);
+
+        this.container.addEventListener(ArtCanvas.MouseEvents.MOVE, function(event) {
+            if (!isDown) {
+                return;
+            }
+
+            //for Touch Panel
+            event.preventDefault();
+
+            var activeCanvas  = self.layers[self.activeLayer];
+            var activeContext = activeCanvas.getContext();
+
+            var x = activeCanvas.getOffsetX(event);
+            var y = activeCanvas.getOffsetY(event);
+
+            switch (self.mode) {
+                case ArtCanvas.Mode.HAND :
+                    var points = activeCanvas.paths.pop();
+                    var point  = points.pop();
+
+                    activeContext.beginPath();
+                    activeContext.moveTo(point.getX(), point.getY());
+                    activeContext.lineTo(x, y);
+                    activeContext.stroke();
+
+                    points.push(point);
+                    points.push(new ArtCanvas.Point(x, y));
+                    activeCanvas.paths.push(points);
+                    break;
+                case ArtCanvas.Mode.TEXT :
+                    break;
+                case ArtCanvas.Mode.FIGURE :
+                    _figure(activeCanvas, activeContext, x, y, event.type);
+                    break;
+                case ArtCanvas.Mode.TRANSFORM :
+                    _transform(activeCanvas, x, y);
+                    break;
+                default :
+                    break;
+            }
+
+            self.callbacks.drawmove(activeCanvas, activeContext, x, y);
+        }, true);
+
+        global.addEventListener(ArtCanvas.MouseEvents.END, function(event) {
+            if (!isDown) {
+                return;
+            }
+
+            var activeCanvas  = self.layers[self.activeLayer];
+            var activeContext = activeCanvas.getContext();
+
+            var x = activeCanvas.getOffsetX(event);
+            var y = activeCanvas.getOffsetY(event);
+
+            switch (self.mode) {
+                case ArtCanvas.Mode.HAND   :
+                    break
+                case ArtCanvas.Mode.FIGURE :
+                    _figure(activeCanvas, activeContext, x, y, event.type);
+                    imagedata = null;
+                    break;
+                case ArtCanvas.Mode.TEXT :
+                    break;
+                case ArtCanvas.Mode.TRANSFORM :
+                    activeCanvas.paths.pop();
+                    break;
+                default :
+                    break;
+            }
+
+            //history.pushState(null, document.title, location.href);
+
+            isDown = false;
+
+            self.callbacks.drawend(activeCanvas, activeContext, x, y);
+        }, true);
+
+        global.popstate = function() {
+            
+        };
+    }
+
+    ArtCanvas.DEFAULT_SIZES        = {};
+    ArtCanvas.DEFAULT_SIZES.WIDTH  = 300;
+    ArtCanvas.DEFAULT_SIZES.HEIGHT = 300;
+
+    ArtCanvas.prototype.getContainerWidth = function() {
+        return parseInt(this.container.style.width);
+    };
+
+    ArtCanvas.prototype.getContainerHeight = function() {
+        return parseInt(this.container.style.height);
+    };
+
+    ArtCanvas.prototype.setCallbacks = function(callbacks) {
+        if (Object.prototype.toString.call(callbacks) !== '[object Object]') {
+            return this;
+        }
+
+        for (var key in callbacks) {
+            if ((key in this.callbacks) && (Object.prototype.toString.call(callbacks[key]) === '[object Function]')) {
+                this.callbacks[key] = callbacks[key];
+            }
+        }
+
+        return this;
+    };
+
+    ArtCanvas.prototype.getMode = function() {
+        return this.mode;
+    };
+
+    ArtCanvas.prototype.setMode = function(mode) {
+        var m = String(mode).toLowerCase();
+
+        switch (m) {
+            case ArtCanvas.Mode.HAND      :
+            case ArtCanvas.Mode.FIGURE    :
+            case ArtCanvas.Mode.TRANSFORM :
+                this.mode = m;
                 break;
-            case 'stroke-rect' :
-                context.beginPath();
-                context.rect(minX, minY, width, height);
-                context.stroke();
-
+            case ArtCanvas.Mode.TEXT      :
+                this.mode = m;
+                this.addLayer(this.getContainerWidth(), this.getContainerHeight());
+            default :
                 break;
-            case 'fill-rect' :
-                context.beginPath();
-                context.rect(minX, minY, width, height);
-                context.fill();
+        }
 
-                break;
-            case 'circle' :
-                context.beginPath();
-                context.arc(points.x1, points.y1, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)), 0, (2 * Math.PI), false);
-                context.stroke();
-                context.fill();
+        var canvas = this.layers[this.activeLayer];
+        canvas.drawText(this.textStyle);;
 
-                //for masking unnecessary path
-                context.beginPath();
-                context.moveTo(points.x1, points.y1);
-                context.lineTo(x, y);
-                context.fill();
+        this.callbacks.changemode(m);
 
-                break;
-            case 'stroke-circle' :
-                context.beginPath();
-                context.arc(points.x1, points.y1, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)), 0, (2 * Math.PI), false);
-                context.stroke();
+        return this;
+    };
 
-                break;
-            case 'fill-circle' :
-                context.beginPath();
-                context.arc(points.x1, points.y1, Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2)), 0, (2 * Math.PI), false);
-                context.fill();
+    ArtCanvas.prototype.getFigure = function() {
+        return this.figure;
+    };
 
-                break;
-            case 'path' :
-                context.beginPath();
-                context.moveTo(points.x1, points.y1);
-                context.lineTo(x, y);
-                context.stroke();
+    ArtCanvas.prototype.setFigure = function(figure) {
+        var f = String(figure).toLowerCase();
 
-                break;
-            case 'bezier2' :
-                if (_isPoints(2)) {
-                    //The 1st mousedown -> Get starting points
-                    //The 2nd mousedown -> Get control points
-                    //Drag -> Draw bezier
-                    context.beginPath();
-                    context.moveTo(points.x1, points.y1);
-                    context.quadraticCurveTo(x, y, points.x2, points.y2);
-                    context.stroke();
-                }
-
+        switch (f) {
+            case ArtCanvas.Figure.RECTANGLE :
+            case ArtCanvas.Figure.CIRCLE    :
+            case ArtCanvas.Figure.LINE      :
+                this.figure = f;
                 break;
             default :
                 break;
         }
+
+        return this;
     };
 
-    var _drawText = function(x, y){
-        if (!flags.text) {
-            return;
+    ArtCanvas.prototype.setFillStyle = function(fillStyle) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.setFillStyle(fillStyle);
+
+        return this;
+    };
+
+    ArtCanvas.prototype.setStrokeStyle = function(strokeStyle) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.setStrokeStyle(strokeStyle);
+
+        return this;
+    };
+
+    ArtCanvas.prototype.setLineWidth = function(lineWidth) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.setLineWidth(lineWidth);
+
+        return this;
+    };
+
+    ArtCanvas.prototype.getTextStyle = function() {
+        return this.textStyle;
+    };
+
+    ArtCanvas.prototype.setTextStyle = function(textStyle) {
+        if (textStyle instanceof ArtCanvas.TextStyle) {
+            this.textStyle = textStyle;
         }
 
-        var width  = Math.abs(x - points.x1);
-        var height = Math.abs(y - points.y1);
-        var textX  = Math.min(x, points.x1);
-        var textY  = Math.min(y, points.y1);
+        return this;
+    };
 
-        //The size of 1 character
-        var charWidth  = context.measureText(text).width / text.length;
-        var charHeight = parseInt(context.font.match(/\s*(\d+)px.*/)[1]);
+    ArtCanvas.prototype.getTransform = function() {
+        return this.transform;
+    };
 
-        //The number of character on 1 line. (at least 1 character)
-        var numChar = Math.floor(width / charWidth);
-        numChar = numChar < 1 ? 1 : numChar;
+    ArtCanvas.prototype.setTransform = function(transform) {
+        var t = String(transform).toLowerCase();
 
-        //Draw text
-        for (var i = 0; i < text.length; i += numChar) {
-            var line = text.slice(i, (i + numChar));
-            textY += charHeight;
-            context.fillText(line, textX, textY);
+        switch (t) {
+            case ArtCanvas.Transform.TRANSLATE :
+            case ArtCanvas.Transform.SCALE     :
+            case ArtCanvas.Transform.ROTATE    :
+                this.transform = t;
+                break;
+            default :
+                break;
+        }
+
+        return this;
+    };
+
+    ArtCanvas.prototype.validateLayerNumer = function(layerNumber, callback) {
+        var index = parseInt(layerNumber);
+
+        if ((index >= 0) && (index < this.layers.length)) {
+            if (Object.prototype.toString.call(callback) === '[object Function]') {
+                callback(index);
+            }
+
+            return true;
+        } else {
+            return false;
         }
     };
 
-    /** 
-     * This private class defines some properties for history
-     * @param {number} maxSize This argument is in order to determine size of stack. The default value is 100
-     */
-    var History = function(size){
-        var STACK_SIZE   = size + 1;  //Stack size
-        var historyStack = [];        //Array for stack
-        var sp           = 0;         //Stack pointer
+    ArtCanvas.prototype.selectLayer = function(layerNumber) {
+        this.validateLayerNumer(layerNumber, function(index) {
+            this.activeLayer = index;
+            this.callbacks.selectlayer(index);
+        }.bind(this));
 
-        return {
-            getStackPointer : function(){
-                return sp;
-            },
-            getStackSize :function(){
-                return historyStack.length;
-            },
-            getPrevImage : function(){
-                return historyStack[sp - 1];
-            },
-            setCurrentImage : function(data){
-                if (sp === STACK_SIZE) {
-                    //Clear stack
-                    historyStack.shift();
-                    sp--;
-                }
-
-                historyStack[sp] = data;
-            },
-            pushHistory : function(data){
-                //Stack is filled ?
-                if (sp === STACK_SIZE) {
-                    //Remove the oldest data
-                    historyStack.shift();
-                    sp--;
-                }
-
-                historyStack[sp++] = data;
-
-                //for on the way of Undo or Redo
-                if (historyStack.length > sp) {
-                    historyStack.length = sp;
-                }
-            },
-            undo : function(){
-                //Stack empty ?
-                if (sp === 0) {
-                    console.error('ArtCanvas History undo() : Stack is empty !!');
-                } else {
-                    return historyStack[--sp];
-                }
-            },
-            redo : function(){
-                //Stack overflow ?
-                if (sp === historyStack.length) {
-                    console.error('ArtCanvas History redo() : Stack is overflow !!');
-                } else {
-                    return historyStack[++sp];
-                }
-            }
-        };
+        return this;
     };
 
-    /** 
-     * This private class defines some properties for image filter
-     */
+    ArtCanvas.prototype.showLayer = function(layerNumber) {
+        this.validateLayerNumer(layerNumber, function(index) {
+            var canvas        = this.layers[index];
+            var canvasElement = canvas.getCanvas();
 
-    var Filter = function(){
-        return {
-            redemphasis : function(input, output){
-                for (var i = 0., len = input.data.length; i < len; i++) {
-                    switch (i % 4) {
-                        case 0 :
-                            //Operate red color
-                            output.data[i] = Math.floor(1.5 * input.data[i]);
-                            if(output.data[i] > 255)output.data[i] = 255;
-                            break;
-                        case 1 :
-                            //Operate green color
-                            output.data[i] = Math.floor(0 * input.data[i]);
-                            break;
-                        case 2 :
-                            //Operate blue color
-                            output.data[i] = Math.floor(1 * input.data[i]);
-                            break;
-                        case 3 :
-                            //Operate alpha channel
-                            output.data[i] = Math.floor(1 * input.data[i]);
-                            break;
-                        default :
-                            break;
-                    }
-                }
+            canvasElement.style.visibility = 'visible';
 
-                return output;
-            },
-            grayscale : function(input, output){
-                for (var i = 0, len = input.data.length; i < len; i += 4) {
-                    var mean = Math.floor((input.data[i] + input.data[i + 1] + input.data[i + 2]) / 3);
-                    output.data[i] = output.data[i + 1] = output.data[i + 2] = mean;
-                    output.data[i + 3] = input.data[i + 3];  //Alpha
-                }
+            this.callbacks.showlayer(canvas, index);
+        }.bind(this));
 
-                return output;
-            },
-            reverse : function(input, output){
-                for (var i = 0, len = input.data.length; i < len; i += 4) {
-                    output.data[i + 0] = 255 - input.data[i + 0];  //R
-                    output.data[i + 1] = 255 - input.data[i + 1];  //G
-                    output.data[i + 2] = 255 - input.data[i + 2];  //B
-                    output.data[i + 3] =       input.data[i + 3];  //Alpha
-                }
-
-                return output;
-            },
-            noise : function(input, output, width, height, noise){
-                var n = parseInt(noise);
-
-                if (isNaN(n) || (n < 0)) {
-                    n = 30000;
-                }
-
-                for (var i = 0; i < n; i++) {
-                    var x = Math.floor(Math.random() * width);
-                    var y = Math.floor(Math.random() * height);
-
-                    var p = ((y * width) + x) * 4;
-
-                    var r = input.data[p + 0] >> 1;
-                    var g = input.data[p + 1] >> 2;
-                    var b = input.data[p + 2] >> 1;
-
-                    output.data[p + 0] = r;
-                    output.data[p + 1] = g;
-                    output.data[p + 2] = b;
-                    output.data[p + 3] = input.data[p + 3];
-                }
-
-                return output;
-            },
-            blur : function(input, output, width){
-                var NUM_INDEX = 9;
-
-                var indexs = new Array(NUM_INDEX);  //[(left-top), (top), (right-top), (left), (center), (right), (left-bottom), (bottom), (right-bottom)]
-                var sum = 0;
-                var num = 0;
-
-                for (var i = 0, len = input.data.length; i < len; i++) {
-                    indexs = [(i - 4 - 4 * width), (i - 4 * width), (i + 4 - 4 * width),
-                              (i - 4),             (i),             (i + 4),
-                              (i - 4 + 4 * width), (i + 4 * width), (i + 4 + 4 * width)];
-
-                    //Clear previous value
-                    sum = 0;
-                    num = 0;
-
-                    for (var j = 0; j < NUM_INDEX; j++) {
-                        if ((indexs[j] >= 0) && (indexs[j] < input.data.length)) {
-                            sum += input.data[indexs[j]];
-                            num++;
-                        }
-                    }
-
-                    output.data[i] = Math.floor(sum / num);
-                }
-
-                return output;
-            },
-            transform : function(input, output, width){
-                var dx = 0;
-                var dy = 0;
-
-                for (var i = 0, len = input.data.length; i < len; i++) {
-                    dx = Math.floor((i % (4 * width)) / 4) + 1;
-                    dy = Math.floor(50 * Math.sin((dx * Math.PI) / 180));
-                    output.data[i] = input.data[i + (4 * width * dy)];
-                }
-
-                return output;
-            }
-        };
+        return this;
     };
 
-    //Get instances of private class as closure
-    var history = History(size);
-    var filter  = Filter();
+    ArtCanvas.prototype.hideLayer = function(layerNumber) {
+        this.validateLayerNumer(layerNumber, function(index) {
+            var canvas        = this.layers[index];
+            var canvasElement = canvas.getCanvas();
 
-    return {
-        canvas : canvas,
-        context : context,
-        draw : function(){
+            canvasElement.style.visibility = 'hidden';
 
-            var click = '';
-            var start = '';
-            var move  = '';
-            var end   = '';
+            this.callbacks.hidelayer(canvas, index);
+        }.bind(this));
 
-            //Touch Panel ?
-            if (/iPhone|iPad|iPod|Android/.test(navigator.userAgent)) {
-                click = 'tap';
-                start = 'touchstart';
-                move  = 'touchmove';
-                end   = 'touchend';
+        return this;
+    };
+
+    ArtCanvas.prototype.addLayer = function(width, height) {
+        this.layers.push(new ArtCanvas.Canvas(this.container, null, width, height, (this.layers.length + 2)));
+        this.activeLayer = this.layers.length - 1;
+
+        this.callbacks.addlayer(this.layers[this.activeLayer], this.activeLayer);
+
+        return this;
+    };
+
+    ArtCanvas.prototype.removeLayer = function(layerNumber) {
+        this.validateLayerNumer(layerNumber, function(index) {
+            var canvas = this.layers[index];
+
+            this.layers.splice(index, 1);
+            this.activeLayer--;
+
+            this.callbacks.removelayer(canvas, index);
+
+            delete canvas;
+        }.bind(this));
+
+        return this;
+    };
+
+    ArtCanvas.prototype.translate = function(translateX, translateY) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.transform(ArtCanvas.Transform.TRANSLATE, [translateX, translateY]);
+        return this;
+    };
+
+    ArtCanvas.prototype.scale = function(scaleX, scaleY) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.transform(ArtCanvas.Transform.SCALE, [scaleX, scaleY]);
+        return this;
+    };
+
+    ArtCanvas.prototype.rotate = function(degree) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.transform(ArtCanvas.Transform.ROTATE, [degree]);
+        return this;
+    };
+
+    (function() {
+
+        function MouseEvents() {
+        };
+
+        var click = '';
+        var start = '';
+        var move  = '';
+        var end   = '';
+
+        //Touch Panel ?
+        if (/iPhone|iPad|iPod|Android/.test(navigator.userAgent)) {
+            click = 'touchend';
+            start = 'touchstart';
+            move  = 'touchmove';
+            end   = 'touchend';
+        } else {
+            click = 'click';
+            start = 'mousedown';
+            move  = 'mousemove';
+            end   = 'mouseup';
+        }
+
+        MouseEvents.CLICK = click;
+        MouseEvents.START = start;
+        MouseEvents.MOVE  = move;
+        MouseEvents.END   = end;
+
+        freeze(MouseEvents);
+
+        ArtCanvas.MouseEvents = MouseEvents;
+
+    })();
+
+    (function() {
+
+        function Mode() {
+        }
+
+        Mode.HAND      = 'hand';
+        Mode.FIGURE    = 'figure';
+        Mode.TEXT      = 'text';
+        Mode.TOOL      = 'tool';
+        Mode.TRANSFORM = 'transform';
+
+        freeze(Mode);
+
+        ArtCanvas.Mode = Mode;
+
+    })();
+
+    (function() {
+
+        function Figure() {
+        }
+
+        Figure.RECTANGLE = 'rectangle';
+        Figure.CIRCLE    = 'circle';
+        Figure.LINE      = 'line';
+
+        freeze(Figure);
+
+        ArtCanvas.Figure = Figure;
+
+    })();
+
+    (function() {
+
+        function Tool() {
+        }
+
+        Tool.DROPPER = 'dropper';
+        Tool.BUCKET  = 'bucket';
+
+        freeze(Tool);
+
+        ArtCanvas.Tool = Tool;
+
+    })();
+
+    (function() {
+
+        function Transform() {
+        }
+
+        Transform.TRANSLATE = 'translate';
+        Transform.SCALE     = 'scale';
+        Transform.ROTATE    = 'rotate';
+
+        freeze(Transform);
+
+        ArtCanvas.Transform = Transform;
+
+    })();
+
+    (function() {
+
+        function Point(pointX, pointY) {
+            this.x = 0;
+            this.y = 0;
+
+            var x = parseFloat(pointX);
+            var y = parseFloat(pointY);
+
+            if (!isNaN(x)) {this.x = x;}
+            if (!isNaN(y)) {this.y = y;}
+        }
+
+        Point.prototype.getX = function() {
+            return this.x;
+        };
+
+        Point.prototype.getY = function() {
+            return this.y;
+        };
+
+        Point.getOffsetPoint = function(point1, point2) {
+            var x = 0;
+            var y = 0;
+
+            if ((point1 instanceof Point) && (point2 instanceof Point)) {
+                x = point2.getX() - point1.getX();
+                y = point2.getY() - point1.getY();
+            }
+
+            return new Point(x, y);
+        };
+
+        Point.getDistance = function(point1, point2) {
+            var point = Point.getOffsetPoint(point1, point2);
+
+            return Math.sqrt(Math.pow(point.getX(), 2) + Math.pow(point.getY(), 2));
+        };
+
+        ArtCanvas.Point = Point;
+
+    })();
+
+    (function() {
+
+        function Rectangle(top, left, width, height) {
+            this.top    = 0;
+            this.left   = 0;
+            this.width  = 0;
+            this.height = 0;
+
+            var t = parseFloat(top);
+            var l = parseFloat(left);
+            var w = parseFloat(width);
+            var h = parseFloat(height);
+
+            if (!isNaN(t)) {this.top    = t;}
+            if (!isNaN(l)) {this.left   = l;}
+            if (w >= 0)    {this.width  = w;}
+            if (h >= 0)    {this.height = h;}
+        }
+
+        Rectangle.prototype.getTop = function() {
+            return this.top;
+        };
+
+        Rectangle.prototype.getLeft = function() {
+            return this.left;
+        };
+
+        Rectangle.prototype.getBottom = function() {
+            return this.top + this.height;
+        };
+
+        Rectangle.prototype.getRight = function() {
+            return this.left + this.width;
+        };
+
+        Rectangle.prototype.getLeftTop = function() {
+            return {top : this.top, left : this.left};
+        };
+
+        Rectangle.prototype.getRightBottom = function() {
+            return {bottom : (this.top + this.height), right : (this.left + this.width)};
+        };
+
+        Rectangle.prototype.getWidth = function() {
+            return this.width;
+        };
+
+        Rectangle.prototype.getHeight = function() {
+            return this.height;
+        };
+
+        Rectangle.prototype.getSize = function() {
+            return {width : this.width, height : this.height};
+        };
+
+        ArtCanvas.Rectangle = Rectangle;
+
+    })();
+
+    (function() {
+
+        function Circle(centerX, centerY, radius) {
+            this.centerX = 0;
+            this.centerY = 0;
+            this.radius  = 0;
+
+            var cx = parseFloat(centerX);
+            var cy = parseFloat(centerY);
+            var r  = parseFloat(radius);
+
+            if (!isNaN(cx)) {this.centerX = cx;}
+            if (!isNaN(cy)) {this.centerY = cy;}
+            if (r >= 0)     {this.radius  = r;}
+        }
+
+        Circle.prototype.getCenterX = function() {
+            return this.centerX;
+        };
+
+        Circle.prototype.getCenterY = function() {
+            return this.centerY;
+        };
+
+        Circle.prototype.getCenter = function() {
+            return {x : this.centerX, y : this.centerY};
+        };
+
+        Circle.prototype.getRadius = function() {
+            return this.radius;
+        };
+
+        ArtCanvas.Circle = Circle;
+
+    })();
+
+    (function() {
+
+        function Line(startPoint, endPoint) {
+            this.startPoint = null;
+            this.endPoint   = null;
+
+            if (startPoint instanceof ArtCanvas.Point) {
+                this.startPoint = startPoint;
+            }
+
+            if (endPoint instanceof ArtCanvas.Point) {
+                this.endPoint = endPoint;
+            }
+        };
+
+        Line.prototype.getStartPoint = function() {
+            return this.startPoint;
+        };
+
+        Line.prototype.getEndPoint = function() {
+            return this.endPoint;
+        };
+
+        ArtCanvas.Line = Line;
+
+    })();
+
+    (function() {
+
+        function Text(text, point, textStyle) {
+            this.text      = String(text);
+            this.point     = new ArtCanvas.Point(0, 0);
+            this.textStyle = null;
+
+            if (point instanceof ArtCanvas.Point) {
+                this.point = point;
+            }
+
+            if (textStyle instanceof TextStyle) {
+                this.textStyle = textStyle;
+            }
+        }
+
+        Text.prototype.getText = function() {
+            return this.text;
+        };
+
+        Text.prototype.getPoint = function() {
+            return this.point;
+        };
+
+        Text.prototype.getTextStyle = function() {
+            return this.textStyle;
+        };
+
+        function TextStyle(font, color) {
+            this.font  = null;
+            this.color = String(color);
+
+            if (font instanceof Font) {
+                this.font = font;
+            }
+        }
+
+        TextStyle.prototype.getFont = function() {
+            return this.font;
+        };
+
+        TextStyle.prototype.getColor = function() {
+            return this.color;
+        };
+
+        function Font(family, style, size) {
+            this.family = String(family);
+            this.style  = String(style);
+            this.size   = String(size);
+        }
+
+        Font.prototype.getFamily = function() {
+            return this.family;
+        };
+
+        Font.prototype.getStyle = function() {
+            return this.style;
+        };
+
+        Font.prototype.getSize = function() {
+            return this.size;
+        };
+
+        Font.prototype.getFontString = function() {
+            return this.style + ' ' + this.size + ' ' + '"' + this.family + '"';
+        };
+
+        ArtCanvas.Text      = Text;
+        ArtCanvas.TextStyle = TextStyle;
+        ArtCanvas.Font      = Font;
+
+    })();
+
+
+    (function() {
+
+        function Canvas(container, canvas, width, height, zIndex) {
+            this.container = document.body;
+            this.canvas    = null;
+            this.context   = null;
+
+            if (container instanceof HTMLElement) {
+                this.container = container;
+            }
+
+            if (canvas instanceof HTMLCanvasElement) {
+                this.canvas = canvas;
             } else {
-                click = 'click';
-                start = 'mousedown';
-                move  = 'mousemove';
-                end   = 'mouseup';
+                this.canvas = document.createElement('canvas');
+                this.container.appendChild(this.canvas);
             }
 
-            var holdImage = '';  //for translate
-            var self = this;
+            this.context = this.canvas.getContext('2d');
 
-            canvas.addEventListener(start, function(event){
-                if (flags.tool && (toolType !== 'translate')) {
-                    return;
-                }
+            var w = parseInt(width);
+            var h = parseInt(height);
 
-                var getImage = context.getImageData(0, 0, canvas.width, canvas.height);  //for history
-                var x = _getX(event);
-                var y = _getY(event);
+            if (w > 0) {this.canvas.width  = w;}
+            if (h > 0) {this.canvas.height = h;}
 
-                if (flags.illust || flags.figure || flags.text) {
-                    //Draw
-                    //Beizer or otherwise ?
-                    if (flags.figure && (figureType === 'bezier2')) {
-                        //Bezier
-                        if (_isPoints(1)) {
-                            //The 2nd operation
-                            history.pushHistory(getImage);
-                            isMouse   = true;
-                            points.x2 = x;
-                            points.y2 = y;
-                        } else {
-                            //The 1st operation
-                            //Not store history in the 1st operation
-                            points.x1 = x;
-                            points.y1 = y;
-                        }
-                    } else {
-                        //Illust mode or Figure mode or Text mode
-                        history.pushHistory(getImage);
-                        isMouse   = true;
-                        points.x1 = x;
-                        points.y1 = y;
-                    }
-                } else {
-                    //Translate tool
-                    history.pushHistory(getImage);
-                    isMouse   = true;
-                    points.x1 = x;
-                    points.y1 = y;
+            this.clear();
 
-                    holdImage = canvas.toDataURL('image/png');
-                }
-            }, true);
+            this.canvas.style.position = 'absolute';
+            this.canvas.style.top      = '0px';
+            this.canvas.style.left     = '0px';
+            this.canvas.style.zIndex   = zIndex;
 
-            canvas.addEventListener(move, function(event){
-                if (!isMouse || (flags.tool && (toolType !== 'translate'))) {
-                    return;
-                }
+            this.context.strokeStyle = 'rgba(0, 0, 0, 1.0)';
+            this.context.fillStyle   = 'rgba(0, 0, 0, 0.0)';
+            this.context.globalAlpha = 1.0;
+            this.context.lineWidth   = 1.0;
+            this.context.lineCap     = 'round';
+            this.context.lineJoin    = 'miter';
 
-                event.preventDefault();  //for touch panel
+            this.textStyle = new ArtCanvas.TextStyle(new ArtCanvas.Font('Arial', 'normal', '16px'), 'rgba(0, 0, 0, 1.0)');
 
-                var x = _getX(event);
-                var y = _getY(event);
-
-                if (flags.illust || flags.figure || flags.text) {
-                    //Determine flags
-                    if (flags.illust) {
-                        //Illust mode
-                        _drawIllust(x, y);
-                    } else if (flags.figure) {
-                        //Figure mode
-                        //Clear previous draw
-                        context.putImageData(history.getPrevImage(), 0, 0);
-
-                        if (figureType === 'bezier2') {
-                            if (_isPoints(2)) {
-                                _drawFigure(x, y);  //Bezier
-                            }
-                        } else {
-                            _drawFigure(x, y);  //Otherwise
-                        }
-                    } else if (flags.text) {
-                        //Text mode
-                        context.putImageData(history.getPrevImage(), 0, 0);  //Clear previous draw
-                        _drawText(x, y);
-                    }
-                } else {
-                    //Translate tool
-                    var translateX = x - points.x1;
-                    var translateY = y - points.y1;
-
-                    var image = new Image();
-                    image.src = holdImage;
-
-                    image.onload = function(){
-                        context.save();
-                        context.clearRect(0, 0, canvas.width, canvas.height);
-                        context.translate(translateX, translateY);
-                        context.globalAlpha = 1;
-                        context.drawImage(this, 0, 0);
-                        context.restore();
-                    };
-                }
-            }, true);
-
-            window.addEventListener(end, function(event){
-                if (!isMouse) {
-                    return;
-                }
-
-                if (flags.tool && (toolType !== 'translate')) {
-                    return;
-                }
-
-
-                isMouse = false;  //Mouse OFF
-
-                //Clear points (except beizer)
-                if (flags.figure && (figureType === 'bezier2')) {
-                    if (_isPoints(2)) {
-                        _clearPoints();
-                    }
-                } else {
-                    _clearPoints();
-                }
-            }, true);
-        },
-        getFileReaderError : function(reader){
-            if (reader instanceof FileReader) {
-                switch (reader.error.code) {
-                    case reader.error.NOT_FOUND_ERR    : return 'NOT_FOUND_ERR';
-                    case reader.error.SECURITY_ERR     : return 'SECURITY_ERR';
-                    case reader.error.ABORT_ERR        : return 'ABORT_ERR';
-                    case reader.error.NOT_READABLE_ERR : return 'NOT_READABLE_ERR';
-                    case reader.error.ENCODING_ERR     : return 'ENCODING_ERR' ;
-                    default : return 'ERR';
-                }
-            } else {
-                console.error('ArtCanvas getFileReaderError() : The 1st argument is instance of FileReader !!');
-            }
-        },
-        loadImage : function(event, successCallback, errorCallback){
-            if (!(event instanceof Event)) {
-                console.error('ArtCanvas loadImage() : The 1st argument is event object !!');
-                return;
-            }
-
-            //for the instance of File (extends Blob)
-            var file = null;
-
-            if (event.type === 'drop') {
-                event.preventDefault();
-
-                file = /*('items' in event.dataTransfer) ? event.dataTransfer.items[0].getAsFile() : */event.dataTransfer.files[0];
-            } else if ('files' in event.target) {
-                file = event.target.files[0];
-            } else {
-                console.error('ArtCanvas loadImage() : The event object is "drop" or file form\'s "change" !!');
-                return;
-            }
-
-            //Create the instance of FileReader
-            var reader = new FileReader();
-
-            var self = this;
-
-            //FileReader event handler on error
-            reader.onerror = function(){
-                if (Object.prototype.toString.call(errorCallback) === '[object Function]') {
-                    errorCallback(self.getFileReaderError(reader));
-                }
+            this.paths      = [];
+            this.transforms = {
+                translate : {x : 0, y : 0},
+                scale     : {x : 1, y : 1},
+                skew      : {x : 0, y : 0},
+                rotate    : 0
             };
+        }
 
-            if (!(file instanceof File)) {
-                throw new Error('Please upload file !!');
-            } else if (file.type.indexOf('image') === -1) {
-                //File is not image file
-                throw new Error('Please upload image file !!');
-            } else {
-                //Read file as dataURL
-                reader.readAsDataURL(file);
+        Canvas.prototype.getCanvas = function() {
+            return this.canvas;
+        };
 
-                //FileReader event handler on success
-                reader.onload = function(){
-                    var image = new Image();
-                    image.src = reader.result;
+        Canvas.prototype.getContext = function() {
+            return this.context;
+        };
 
-                    image.onload = function(){
-                        history.pushHistory(context.getImageData(0, 0, canvas.width, canvas.height));
-                        context.drawImage(this, 0, 0, canvas.width, canvas.height);
-
-                        if (Object.prototype.toString.call(successCallback) === '[object Function]') {
-                            successCallback(file);
-                        }
-                    };
-                };
+        Canvas.prototype.draw = function(isTransform) {
+            if (isTransform) {
+                this.transform();
             }
 
-            return file;
-        },
-        getDataURL : function(format){
-            var format = (Object.prototype.toString.call(format) === '[object String]') ? format.toLowerCase() : 'png';
+            for (var i = 0, len = this.paths.length; i < len; i++) {
+                var paths = this.paths[i];
 
-            //Get image file as Data URL
-            return canvas.toDataURL('image/' + format).replace('image/' + format, 'image/octet-stream');
-        },
-        getMode : function(){
-            for (var key in flags) {
-                if (flags[key]) {
-                    return key;
+                if (Array.isArray(paths)) {
+                    for (var j = 0, num = paths.length; j < num; j++) {
+                        var path = paths[j];
+                        var x    = path.getX();
+                        var y    = path.getY();
+
+                        if (j === 0) {
+                            this.context.beginPath();
+                            this.context.moveTo(x, y);
+                        } else {
+                            this.context.lineTo(x, y);
+                            this.context.stroke();
+                        }
+                    }
+                } else if (paths instanceof ArtCanvas.Rectangle) {
+                    var top    = paths.getTop();
+                    var left   = paths.getLeft();
+                    var width  = paths.getWidth();
+                    var height = paths.getHeight();
+
+                    this.context.beginPath();
+                    this.context.rect(top, left, width, height);
+                    this.context.stroke();
+                    this.context.fill();
+                } else if (paths instanceof ArtCanvas.Circle) {
+                    var centerX = paths.getCenterX();
+                    var centerY = paths.getCenterY();
+                    var radius  = paths.getRadius();
+
+                    this.context.beginPath();
+                    this.context.arc(centerX, centerY, radius, 0, (2 * Math.PI), false);
+                    this.context.stroke();
+                    this.context.fill();
+                } else if (paths instanceof ArtCanvas.Line) {
+                    var start = paths.getStartPoint();
+                    var end   = paths.getEndPoint();
+
+                    this.context.beginPath();
+                    this.context.moveTo(start.getX(), start.getY());
+                    this.context.lineTo(end.getX(), end.getY());
+                    this.context.stroke();
+                } else if (paths instanceof ArtCanvas.Text) {
+                    var text      = paths.getText();
+                    var point     = paths.getPoint();
+                    var textStyle = paths.getTextStyle();
+
+                    var font  = textStyle.getFont();
+                    var color = textStyle.getColor();
+
+                    var previousColor = this.context.fillStyle;
+
+                    this.context.font = font.getFontString();
+                    this.context.fillStyle = color;
+                    this.context.fillText(text, point.getX(), point.getY());
+
+                    this.context.fillStyle = previousColor;
+                    
                 }
             }
-        },
-        setMode : function(mode){
-            var mode = String(mode).toLowerCase();
 
-            //Clear
-            for (var key in flags) {
-                flags[key] = false;
+            
+            return this;
+        };
+
+        Canvas.prototype.drawText = function(textStyle) {
+            if (!(textStyle instanceof ArtCanvas.TextStyle)) {
+                return '';
             }
 
-            _clearPoints();
-            context.globalCompositeOperation = 'source-over';  //Eraser OFF
+            var textbox = this.container.querySelector('[type="text"]');
 
-            if (mode in flags) {
-                flags[mode] = true;
-            } else {
-                console.error('ArtCanvas setMode() : The 1st argument is one of "illust", "figure", "text", "tool", "eraser" !!'); 
+            if (!(textbox instanceof HTMLInputElement)) {
+                return '';
             }
-        },
-        getFigure : function(){
-            return figureType;
-        },
-        setFigure : function(type){
-            switch (String(type).toLowerCase()) {
-                case 'rect'          :
-                case 'stroke-rect'   :
-                case 'fill-rect'     :
-                case 'circle'        :
-                case 'stroke-circle' :
-                case 'fill-circle'   :
-                case 'path'          :
-                case 'bezier2'       :
-                    figureType = type;
-                    break;
-                default :
-                    console.error('ArtCanvas setFigure() : The 1st argument is one of "rect", "stroke-rect", "fill-rect", "circle", "stroke-circle", "fill-circle", "path", "bezier2" !!');
-                    break;
-            }
-        },
-        getText : function(){
+
+            var font      = textStyle.getFont();
+            var color     = textStyle.getColor();
+            var fontSize  = parseInt(font.getSize());
+
+            var text = textbox.value;
+            var x    = parseInt(textbox.style.left);
+            var y    = parseInt(textbox.style.top) + fontSize;
+
+            this.container.removeChild(textbox);
+
+            var heldColor = this.context.fillStyle;
+
+            this.context.font      = font.getFontString();
+            this.context.fillStyle = color;
+            this.context.fillText(text, x, y);
+
+            this.context.fillStyle = heldColor;
+
+            this.paths.push(new ArtCanvas.Text(text, new ArtCanvas.Point(x, y), textStyle));
+
             return text;
-        },
-        setText : function(str){
-            text = String(str);
-        },
-        getTool : function(){
-            return toolType;
-        },
-        setTool : function(type){
-            switch (String(type).toLowerCase()) {
-                case 'dropper'   :
-                case 'fill'      :
-                case 'translate' :
-                case 'zoom-in'   :
-                case 'zoom-out'  :
-                case 'rotate'    :
-                    toolType = type;
-                    break;
-                default :
-                    console.error('ArtCanvas setTool() : The 1st argument is one of "dropper", "fill", "translate", "zoom-in", "zoom-out", "rotate" !!');
-                    break;
-            }
-        },
-        getRGB : function(color){
-            switch (String(color).toLowerCase()) {
-                case 'r' :
-                case 'g' :
-                case 'b' :
-                    return rgbs[color];
-                default :
-                    console.error('ArtCanvas getRGB() : The 1st argument is one of "r", "g", "b" !!');
-                    break;
-            }
-        },
-        setRGB : function(color, value){
-            switch (String(color).toLowerCase()) {
-                case 'r' :
-                case 'g' :
-                case 'b' :
-                    var value = parseInt(value);
+        };
 
-                    if ((value >= 0) && (value <= 255)) {
-                        rgbs[color] = value;
-                    } else {
-                        console.error('ArtCanvas setRGB() : The 2nd argument is between 0 and 255 !!');
+        Canvas.prototype.transform = function(type, amounts) {
+            if (!Array.isArray(amounts)) {
+                amounts = [amounts];
+            }
+
+            var centerPoint = this.getCenterPoint();
+            var centerX     = centerPoint.getX();
+            var centerY     = centerPoint.getY();
+
+            var transforms  = this.transforms;
+            var translates  = transforms.translate;
+            var scales      = transforms.scale;
+            var skews       = transforms.skew;
+
+            switch (String(type).toLowerCase()) {
+                case ArtCanvas.Transform.TRANSLATE :
+                    if (amounts.length < 2) {
+                        break;
                     }
 
+                    var dx = parseFloat(amounts[0]);
+                    var dy = parseFloat(amounts[1]);
+
+                    if (isNaN(dx) || isNaN(dy)) {
+                        break;
+                    }
+
+                    translates.x = dx;
+                    translates.y = dy;
+
+                    break;
+                case ArtCanvas.Transform.SCALE :
+                    if (amounts.length < 2) {
+                        break;
+                    }
+
+                    var sx = parseFloat(amounts[0]);
+                    var sy = parseFloat(amounts[1]);
+
+                    if (isNaN(sx) || isNaN(sy)) {
+                        break;
+                    }
+
+                    scales.x = sx;
+                    scales.y = sy;
+
+                    break;
+                case ArtCanvas.Transform.ROTATE :
+                    if (amounts.length < 1) {
+                        break;
+                    }
+
+                    var degree = parseFloat(amounts[0]);
+
+                    if (isNaN(degree)) {
+                        break;
+                    }
+
+                    transforms.rotate = (degree * Math.PI) / 180;
+
                     break;
                 default :
-                    console.error('ArtCanvas setRGB() : The 1st argument is one of "r", "g", "b" !!');
                     break;
             }
-        },
-        undo : function(errorCallback){
-            if (history.getStackPointer() > 0) {
-                if (history.getStackPointer() === history.getStackSize()) {
-                    history.setCurrentImage(context.getImageData(0, 0, canvas.width, canvas.height));
-                }
 
-                context.putImageData(history.undo(), 0, 0);
-                _clearPoints();
-            } else {
-                if (Object.prototype.toString.call(errorCallback) === '[object Function]') {
-                    errorCallback();
-                }
-            }
-        },
-        redo : function(errorCallback){
-            if (history.getStackPointer() < (history.getStackSize() - 1)) {
-                context.putImageData(history.redo(), 0, 0);
-                _clearPoints();
-            } else {
-                if (Object.prototype.toString.call(errorCallback) === '[object Function]') {
-                    errorCallback();
-                }
-            }
-        },
-        erase : function(offCallback, onCallback){
-            if (flags.tool) {
-                return;
-            }
+            var rotate       = transforms.rotate;
+            var rotateMatrix = [
+                 Math.cos(rotate), Math.sin(rotate),
+                -Math.sin(rotate), Math.cos(rotate),
+                                0,                0
+            ];
 
-            _clearPoints();
+            this.clear();
+            this.context.save();
 
-            if (flags.eraser) {
-                flags.eraser = false;
-                context.globalCompositeOperation = 'source-over';
+            switch (String(type).toLowerCase()) {
+                case ArtCanvas.Transform.TRANSLATE :
+                case ArtCanvas.Transform.SCALE     :
+                    this.context.setTransform(1, 0, 0, 1, 0, 0);
+                    this.context.transform(1, 0, 0, 1, centerX, centerY);
+                    this.context.transform.apply(this.context, rotateMatrix);
+                    this.context.transform(1, 0, 0, 1, -centerX, -centerY);
 
-                if (Object.prototype.toString.call(offCallback) === '[object Function]') {
-                    offCallback();
-                }
-            } else {
-                flags.eraser = true;
-                context.globalCompositeOperation = 'destination-out';
+                    this.context.transform(scales.x, 0, 0, scales.y, translates.x, translates.y);
 
-                if (Object.prototype.toString.call(onCallback) === '[object Function]') {
-                    onCallback();
-                }
-            }
-        },
-        clear : function(confirmCallback){
-            confirmCallback = (Object.prototype.toString.call(confirmCallback) === '[object Function]') ? confirmCallback : function(){return true;};
+                    break;
+                case ArtCanvas.Transform.ROTATE :
+                    this.context.setTransform(1, 0, 0, 1, 0, 0);
+                    this.context.transform(scales.x, 0, 0, scales.y, translates.x, translates.y);
 
-            history.pushHistory(context.getImageData(0, 0, canvas.width, canvas.height));
+                    this.context.transform(1, 0, 0, 1, centerX, centerY);
+                    this.context.transform.apply(this.context, rotateMatrix);
+                    this.context.transform(1, 0, 0, 1, -centerX, -centerY);
 
-            if (confirmCallback()) {
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                _clearPoints();
-            }
-        },
-        pickRGB : function(event){
-            if (toolType !== 'dropper') {
-                return;
+                    break;
+                default :
+                    break;
             }
 
-            var pickX = _getX(event);
-            var pickY = _getY(event);
+            if (arguments.length > 1) {
+                this.draw(false);
+                this.context.restore();
+            }
 
-            var picks = context.getImageData(pickX, pickY, 1, 1);
+            return this;
+        };
 
-            rgbs.r = picks.data[0];
-            rgbs.g = picks.data[1];
-            rgbs.b = picks.data[2];
-        },
-        fill : function(event, rgbas){
+        Canvas.prototype.clear = function() {
+            this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            return this;
+        };
+
+        Canvas.prototype.clearPaths = function() {
+            this.paths = [];
+            return this;
+        };
+
+        Canvas.prototype.getFillStyle = function() {
+            return this.context.fillStyle;
+        };
+
+        Canvas.prototype.setFillStyle = function(fillStyle) {
+            this.context.fillStyle = String(fillStyle);
+            this.draw(true);
+
+            return this;
+        };
+
+        Canvas.prototype.getStrokeStyle = function() {
+            return this.context.strokeStyle;
+        };
+
+        Canvas.prototype.setStrokeStyle = function(StrokeStyle) {
+            this.context.strokeStyle = String(StrokeStyle);
+            this.draw(true);
+
+            return this;
+        };
+
+        Canvas.prototype.getLineWidth = function() {
+            return this.context.lineWidth;
+        };
+
+        Canvas.prototype.setLineWidth = function(lineWidth) {
+            var w = parseFloat(lineWidth);
+
+            if (w > 0) {
+                this.context.lineWidth= w;
+                this.draw(true);
+            }
+
+            return this;
+        };
+
+        Canvas.prototype.getOffsetX = function(event) {
             if (!(event instanceof Event)) {
-                console.error('ArtCanvas fill() : The 1st argument is event object !!');
-                return;
+                return 0;
             }
 
-            if (Object.prototype.toString.call(rgbas) !== '[object Object]') {
-                console.error('ArtCanvas fill() : The 2nd argument is object that has four properties of "r" and "g" and "b" and "a" !!');
-                return;
+            if (event.pageX) {
+                //Desktop
+            } else if (event.touches[0]) {
+                event = event.touches[0];         //Smartphone
+            } else if (event.changedTouches[0]) {
+                event = event.changedTouches[0];  //Smartphone
             }
 
-            if (toolType !== 'fill') {
-                return;
+            var scrollLeft = this.container.scrollLeft;
+            var offsetX    = event.pageX - this.container.offsetLeft + scrollLeft;
+
+            var w = this.canvas.width;
+
+            if (offsetX < 0) {offsetX = 0;}
+            if (offsetX > w) {offsetX = w;}
+
+            return offsetX;
+        };
+
+        Canvas.prototype.getOffsetY = function(event) {
+            if (!(event instanceof Event)) {
+                return 0;
             }
 
-            history.pushHistory(context.getImageData(0, 0, canvas.width, canvas.height));
+            if (event.pageY) {
+                //Desktop
+            } else if (event.touches[0]) {
+                event = event.touches[0];         //Smartphone
+            } else if (event.changedTouches[0]) {
+                event = event.changedTouches[0];  //Smartphone
+            }
 
-            var imagedata = context.getImageData(0, 0, canvas.width, canvas.height);
+            var scrollTop = this.container.scrollTop;
+            var offsetY   = event.pageY - this.container.offsetTop + scrollTop;
 
-            var startX = _getX(event);
-            var startY = _getY(event);
+            var h = this.canvas.height;
 
-            var getPixelPos = function(x, y){
-                return ((canvas.width * y) + x) * 4;
-            };
+            if (offsetY < 0) {offsetY = 0;}
+            if (offsetY > h) {offsetY = h;}
 
-            var setPixelPos = function(pos){
-                imagedata.data[pos    ] = rgbas.r;
-                imagedata.data[pos + 1] = rgbas.g;
-                imagedata.data[pos + 2] = rgbas.b;
-                imagedata.data[pos + 3] = rgbas.a * 255;
-            };
+            return offsetY;
+        };
 
-            var startPixelPos = getPixelPos(startX, startY);
+        Canvas.prototype.getCenterPoint = function() {
+            var centerX = 0;
+            var centerY = 0;
 
-            var baseColors = {
-              r : imagedata.data[startPixelPos],
-              g : imagedata.data[startPixelPos + 1],
-              b : imagedata.data[startPixelPos + 2],
-              a : imagedata.data[startPixelPos + 3]
-            };
+            for (var i = 0, len = this.paths.length; i < len; i++) {
+                var paths = this.paths[i];
 
-            var isMatchColor = function(x, y, colors){
-                var pos = getPixelPos(x, y);
+                if (Array.isArray(paths) || (paths instanceof ArtCanvas.Line)) {
+                    var minX = Number.MAX_VALUE;
+                    var minY = Number.MAX_VALUE;
+                    var maxX = 0;
+                    var maxY = 0;
 
-                if (imagedata.data[pos] !== colors.r) {
-                    return false;
-                } else if (imagedata.data[pos + 1] !== colors.g) {
-                    return false;
-                } else if (imagedata.data[pos + 2] !== colors.b) {
-                    return false;
-                } else if (imagedata.data[pos + 3] !== colors.a) {
-                    return false;
-                } else {
-                    return true;
-                }
-            };
+                    if (Array.isArray(paths)) {
+                        for (var j = 0, num = paths.length; j < num; j++) {
+                            var path = paths[j];
+                            var x    = path.getX();
+                            var y    = path.getY();
 
-            var paintHorizon = function(left, right, y){
-                for (var x = left; x <= right; x++) {
-                    var pos = getPixelPos(x, y);
-                    setPixelPos(pos);
-                }
-            };
-
-            var scanHorizon = function(left, right, y, buffer){
-                while (left <= right) {
-                    while (left <= right) {
-                        if (isMatchColor(left, y, baseColors)) {
-                            break;
-                        } else {
-                            left++;
+                            if (x < minX) {minX = x;}
+                            if (y < minY) {minY = y;}
+                            if (x > maxX) {maxX = x;}
+                            if (y > maxY) {maxY = y;}
                         }
+                    } else if (paths instanceof ArtCanvas.Line) {
+                        var start = paths.getStartPoint();
+                        var end   = paths.getEndPoint();
+
+                        minX = Math.min(start.getX(), end.getX());
+                        minY = Math.min(start.getY(), end.getY());
+                        maxX = Math.max(start.getX(), end.getX());
+                        maxY = Math.max(start.getY(), end.getY());
                     }
 
-                    if (left > right) {
-                        break;
-                    }
+                    centerX = parseInt(((maxX - minX) / 2) + minX);
+                    centerY = parseInt(((maxY - minY) / 2) + minY);
+                } else if (paths instanceof ArtCanvas.Rectangle) {
+                    var left   = paths.getLeft();
+                    var top    = paths.getTop();
+                    var width  = paths.getWidth();
+                    var height = paths.getHeight();
 
-                    while (left <= right) {
-                        if (isMatchColor(left, y, baseColors)) {
-                            left++;
-                        } else {
-                            break;
-                        }
-                    }
+                    centerX = parseInt(width  / 2) + left;
+                    centerY = parseInt(height / 2) + top;
+                } else if (paths instanceof ArtCanvas.Circle) {
+                    centerX = paths.getCenterX();
+                    centerY = paths.getCenterY();
+                } else if (paths instanceof ArtCanvas.Text) {
+                    var text      = paths.getText();
+                    var point     = paths.getPoint();
+                    var textStyle = paths.getTextStyle();
+                    var font      = textStyle.getFont();
+                    var fontSize  = parseInt(font.getSize());
 
-                    buffer.push({x : (left - 1), y : y});
+                    centerX = point.getX() + parseInt(this.context.measureText(text).width / 2);
+                    centerY = point.getY() + parseInt(fontSize / 2);
                 }
-            };
-
-            if (isMatchColor(startX, startY, rgbas)) {
-                context.putImageData(imagedata, 0, 0);
-                return;
             }
 
-            var buffer = [];
-            buffer.push({x : startX, y : startY});
+            return new ArtCanvas.Point(centerX, centerY);
+        };
 
-            while (buffer.length > 0) {
-                var positions = buffer.pop();
-
-                var left  = positions.x;
-                var right = positions.x;
-
-                if (isMatchColor(positions.x, positions.y, rgbas)) {
-                    continue;
-                }
-
-                //-> left
-                while (0 < left) {
-                    if (isMatchColor((left - 1), positions.y, baseColors)) {
-                        left--;
-                    } else {
-                        break;
-                    }
-                }
-
-                //-> right
-                while (right < (canvas.width - 1)) {
-                    if (isMatchColor((right + 1), positions.y, baseColors)) {
-                        right++;
-                    } else {
-                        break;
-                    }
-                }
-
-                paintHorizon(left, right, positions.y);
-
-                if ((positions.y + 1) < canvas.height) {scanHorizon(left, right, (positions.y + 1), buffer);}
-                if ((positions.y - 1) >= 0)            {scanHorizon(left, right, (positions.y - 1), buffer);}
+        Canvas.prototype.createTextbox = function(point) {
+            if (!(point instanceof ArtCanvas.Point)) {
+                return this;
             }
 
-            context.putImageData(imagedata, 0, 0);
-        },
-        scale : function(x, y){
-            if (!flags.tool || ((toolType !== 'zoom-in') && (toolType !== 'zoom-out'))) {
-                return;
+            //Already exists ?
+            if (this.container.querySelector('[type="text"]') instanceof HTMLInputElement) {
+                return this;
             }
 
-            history.pushHistory(context.getImageData(0, 0, canvas.width, canvas.height));
+            var x = point.getX();
+            var y = point.getY();
 
-            var scaleX = parseFloat(x);
-            var scaleY = parseFloat(y);
+            var textbox = document.createElement('input');
 
-            if ((scaleX <= 0) || (scaleY <= 0)) {
-                console.error('ArtCanvas scale() : The arguments are greater than 0 !!');
-                return;
-            }
+            textbox.setAttribute('type', 'text');
 
-            var image = new Image();
-            image.src = canvas.toDataURL('image/png');
+            var textStyle  = this.textStyle;
+            var font       = this.textStyle.getFont();
+            var color      = this.textStyle.getColor();
+            var fontFamily = font.getFamily();
+            var fontStyle  = font.getStyle();
+            var fontSize   = font.getSize();
 
-            image.onload = function(){
-                context.save();
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                context.scale(scaleX, scaleY);
-                context.globalAlpha = 1;
-                context.drawImage(this, 0, 0);
-                context.restore();
-            };
-        },
-        rotate : function(angle){
-           if (!flags.tool || (toolType !== 'rotate')) {
-               return;
-           }
+            textbox.style.position   = 'absolute';
+            textbox.style.top        = y + 'px';
+            textbox.style.left       = x + 'px';
+            textbox.style.zIndex     = parseInt(this.canvas.style.zIndex) + 1;
+            textbox.style.outline    = 'none';
+            //textbox.style.fontFamily = fontFamily;
+            //textbox.style.fontStyle  = fontStyle;
+            //textbox.style.fontSize   = fontSize;
+            textbox.style.padding    = '0.5em';
 
-            history.pushHistory(context.getImageData(0, 0, canvas.width, canvas.height));
+            this.container.appendChild(textbox);
 
-            var a = parseFloat(angle);
-            var centerX = canvas.width / 2;
-            var centerY = canvas.height / 2;
+            return textbox;
+        };
 
-            if ((a < 0) || (a > 360)) {
-                console.error('ArtCanvas rotate() : The 1st argument is between 0 and 360 !!');
-                return;
-            }
+        ArtCanvas.Canvas = Canvas;
 
-            var radian = (a * Math.PI) / 180;
+    })();
 
-            var image = new Image();
-            image.src = canvas.toDataURL('image/png');
+    global.ArtCanvas = ArtCanvas;
 
-            image.onload = function(){
-                context.save();
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                context.translate(centerX, centerY);    //Move origin to center in canvas
-                context.rotate(radian);
-                context.translate(-centerX, -centerY);  //Move origin to left-top in canvas
-                context.globalAlpha = 1;
-                context.drawImage(this, 0, 0);
-                context.restore();
-            };
-        },
-        filter : function(type, numNoise){
-            var createdata  = null;
-            var getImage    = context.getImageData(0, 0, canvas.width, canvas.height);
-            var createImage = context.createImageData(canvas.width, canvas.height);
-
-            history.pushHistory(getImage);
-
-            switch (String(type).toLowerCase()) {
-                case 'red' :
-                    createdata = filter.redemphasis(getImage, createImage);
-                    break;
-                case 'gray' :
-                    createdata = filter.grayscale(getImage, createImage);
-                    break;
-                case 'reverse' :
-                    createdata = filter.reverse(getImage, createImage);
-                    break;
-                case 'noise' :
-                    createdata = filter.noise(getImage, createImage, canvas.width, canvas.height, numNoise);
-                    break;
-                case 'blur' :
-                    createdata = filter.blur(getImage, createImage, canvas.width);
-                    break;
-                case 'transform' :
-                    createdata = filter.transform(getImage, createImage, canvas.width);
-                    break;
-                default :
-                    console.error('ArtCanvas filter() : The 1st argument is one of "red", "gray", "reverse", "noise", "blur", "transform" !!');
-                    break;
-            }
-
-            context.putImageData(createdata, 0, 0);
-        }
-    };
-};
+})(window);
