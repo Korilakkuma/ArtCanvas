@@ -45,6 +45,21 @@ for example,
   
 ### Mode
   
+This library has the following modes.
+  
+    console.log(ArtCanvas.Mode.HAND);       // This mode is in order to draw by pen
+    console.log(ArtCanvas.Mode.FIGURE);     // This mode is in order to draw figures
+    console.log(ArtCanvas.Mode.TEXT);       // This mode is in order to draw text
+    console.log(ArtCanvas.Mode.TRANSFORM);  // This mode is in order to transform drawn objects
+  
+Getter and Setter for these mode are the following,
+  
+    // Getter
+    var mode = artCanvas.getMode();  // -> ArtCanvas.Mode.HAND is the default mode
+    
+    // Setter
+    artCanvas.setMode(ArtCanvas.Mode.FIGURE);  // -> change mode to ArtCanvas.Mode.FIGURE
+  
 ### Draw
   
 ### Styles
