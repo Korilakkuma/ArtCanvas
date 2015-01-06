@@ -100,6 +100,32 @@ If text input ended, the text is drawn on canvas by changing to other mode.
   
 ### Styles
   
+#### fill style / stroke style / line width
+  
+It is required that color string (hex, rgb, hsl, rgba, hsla ...etc) is designated for fill style and stroke style.
+  
+    artCanvas.setFillStyle('rgba(0, 0, 255, 1.0)');    // fill style
+    artCanvas.setStrokeStyle('rgba(255, 0, 0, 1.0)');  // stroke style
+  
+It is required that number is designated for line width.
+  
+    artCanvas.setLineWidth(3);  //line width
+  
+#### Text style
+  
+    var fontFamily = 'Helvetica';
+    var fontStyle  = 'oblique';
+    var fontSize   = '24px'
+
+    //Create the instance of ArtCanvas.Font
+    var font = new ArtCanvas.Font(fontFamily, fontStyle, fontSize);
+
+    // color string (hex, rgb, hsl, rgba, hsla ...etc)
+    var color = 'rgba(153, 153, 153, 1.0)';
+
+    //Set the instance of ArtCanvas.TextStyle
+    artCanvas.setTextStyle(new ArtCanvas.TextStyle(font, color));
+  
 ### Transforms
   
 ### Layer
