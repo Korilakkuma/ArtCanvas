@@ -128,5 +128,15 @@ It is required that number is designated for line width.
   
 ### Transforms
   
+The first, it is required to change the application mode.
+  
+    artCanvas.setMode(ArtCanvas.Mode.TRANSFORM);
+  
+Next, it is required to designate transform type.
+  
+    artCanvas.setTransform(ArtCanvas.Transform.TRANSLATE);  // Translate
+    artCanvas.setTransform(ArtCanvas.Transform.SCALE);      // Scale
+    artCanvas.setTransform(ArtCanvas.Transform.ROTATE);     // Rotate
+  
 ### Layer
   
