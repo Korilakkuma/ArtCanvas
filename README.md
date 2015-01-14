@@ -140,3 +140,26 @@ Next, it is required to designate transform type.
   
 ### Layer
   
+#### Select
+  
+    var layerNumber = 0;  //This value is number between 0 and (the number of layers - 1)
+
+    artCanvas.selectLayer(layerNumber);
+  
+#### Add
+  
+    artCanvas.addLayer();
+  
+#### Remove
+  
+    var layerNumber = 0;  //This value is number between 0 and (the number of layers - 1)
+
+    artCanvas.removeLayer(layerNumber);
+  
+#### Show / Hide
+  
+    var layerNumber = 0;  //This value is number between 0 and (the number of layers - 1)
+
+    artCanvas.showLayer(layerNumber);
+    artCanvas.hideLayer(layerNumber);
+  
