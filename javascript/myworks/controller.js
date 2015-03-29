@@ -137,6 +137,28 @@ $(function() {
         }
     });
 
+    $('#image-uploader-masker').on('click', function() {
+        $('#image-uploader').trigger('click');
+    });
+
+    $('#image-uploader').on('change', function(event) {
+        var file = event.originalEvent.target.files[0];
+
+        if (!(file instanceof File)) {
+            window.alert('Please Upload File.');
+        } else if (file.type.indexOf('image') === -1) {
+            window.alert('Please Upload Image File.');
+        } else {
+            var reader = new FileReader();
+
+            reader.onload = function() {
+                artCanvas.drawImage(reader.result);
+            };
+
+            reader.readAsDataURL(file);
+        }
+    });
+
     $('#select-transform').change(function() {
         if (artCanvas.getMode() === ArtCanvas.Mode.TEXT) {
             $('#checkbox-text-mode').trigger(ArtCanvas.MouseEvents.CLICK);
