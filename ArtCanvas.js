@@ -638,6 +638,17 @@
     };
 
     /**
+     * This method draws image in the target layer.
+     * @param {string} src This argument is image file path.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.drawImage = function(src) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.drawImage(src);
+        return this;
+    };
+
+    /**
      * This method translates the drawn objects in the target layer.
      * @param {number} translateX This argument is horizontal translation amount.
      * @param {number} translateY This argument is vertical translation amount.
@@ -1324,7 +1335,8 @@
                     this.context.fillText(text, point.getX(), point.getY());
 
                     this.context.fillStyle = previousColor;
-                    
+                } else if (paths instanceof Image) {
+                    this.context.drawImage(paths, 0, 0);
                 }
             }
 
@@ -1368,6 +1380,25 @@
             this.paths.push(new ArtCanvas.Text(text, new ArtCanvas.Point(x, y), textStyle));
 
             return text;
+        };
+
+        /**
+         * This method draws image.
+         * @param {string} src This argument is image file path.
+         * @return {Canvas} This is returned for method chain.
+         */
+        Canvas.prototype.drawImage = function(src) {
+            var self  = this;
+            var image = new Image();
+
+            image.src = String(src);
+
+            image.onload = function() {
+                self.context.drawImage(this, 0, 0);
+                self.paths.push(this);
+            };
+
+            return this;
         };
 
         /**
