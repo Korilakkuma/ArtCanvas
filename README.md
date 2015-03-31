@@ -98,6 +98,14 @@ If text input ended, the text is drawn on canvas by changing to other mode.
     // Change mode -> The typed text is drawn
     artCanvas.setMode(ArtCanvas.Mode.HAND);
   
+#### Image
+  
+In the case of drawing image,
+  
+    var src = /* image file path */;
+
+    artCanvas.drawImage(src);
+  
 ### Styles
   
 #### fill style / stroke style / line width
