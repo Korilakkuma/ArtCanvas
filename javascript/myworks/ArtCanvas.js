@@ -1,4 +1,4 @@
-/** 
+/**
  * ArtCanvas.js
  * @fileoverview HTML5 Canvas Library
  *
@@ -11,7 +11,7 @@
 (function(global) {
     'use strict';
 
-    /** 
+    /**
      * This class can be used as global object.
      * This class has classes that are defined by "ArtCanvas.js" as class property.
      * This class manages data for drawing. For example, Layer, Canvas, Application Status ...etc
@@ -30,7 +30,7 @@
             this.container = container;
         }
 
-        //Set CSS properties for piling HTMLCanvasElements up
+        // Set CSS properties for piling HTMLCanvasElements up
         this.container.style.position = 'relative';
         this.container.style.top      = '0px';
         this.container.style.left     = '0px';
@@ -44,6 +44,7 @@
 
         this.mode      = ArtCanvas.Mode.HAND;
         this.figure    = ArtCanvas.Figure.RECTANGLE;
+        this.textStyle = new ArtCanvas.TextStyle(new ArtCanvas.Font('Arial', 'normal', '16px'), new ArtCanvas.Color(0, 0, 0, 1.0).toString());
         this.transform = ArtCanvas.Transform.TRANSLATE;
 
         /** {@type Array.<Canvas>} */
@@ -232,7 +233,7 @@
                 return;
             }
 
-            //for Touch Panel
+            // for Touch Panel
             event.preventDefault();
 
             var activeCanvas  = self.layers[self.activeLayer];
@@ -297,16 +298,11 @@
                     break;
             }
 
-            //history.pushState(null, document.title, location.href);
-
             isDown = false;
 
             self.callbacks.drawend(activeCanvas, activeContext, x, y);
         }, true);
 
-        //global.popstate = function() {
-        //    
-        //};
     }
 
     /** Constant values as class properties (static properties) */
@@ -374,6 +370,7 @@
             case ArtCanvas.Mode.TEXT      :
                 this.mode = m;
                 this.addLayer(this.getContainerWidth(), this.getContainerHeight());
+                break;
             default :
                 break;
         }
@@ -382,148 +379,6 @@
         canvas.drawText(this.textStyle);;
 
         this.callbacks.changemode(m);
-
-        return this;
-    };
-
-    /**
-     * This method is getter for string that is defined by Figure class.
-     * @return {string} This is returned as string that is defined by Figure class.
-     */
-    ArtCanvas.prototype.getFigure = function() {
-        return this.figure;
-    };
-
-    /**
-     * This method is setter for string that is defined by Figure class.
-     * @param {string} figure This argument is string that is defined by Figure class.
-     * @return {ArtCanvas} This is returned for method chain.
-     */
-    ArtCanvas.prototype.setFigure = function(figure) {
-        var f = String(figure).toLowerCase();
-
-        switch (f) {
-            case ArtCanvas.Figure.RECTANGLE :
-            case ArtCanvas.Figure.CIRCLE    :
-            case ArtCanvas.Figure.LINE      :
-                this.figure = f;
-                break;
-            default :
-                break;
-        }
-
-        return this;
-    };
-
-    /**
-     * This method gets fill color to HTMLCanvasElement in the target layer.
-     * @return {string} This is returned as fill color to HTMLCanvasElement in the target layer.
-     */
-    ArtCanvas.prototype.getFillStyle = function() {
-        var canvas = this.layers[this.activeLayer];
-        return canvas.getFillStyle();
-    };
-
-    /**
-     * This method sets fill color to HTMLCanvasElement in the target layer.
-     * @param {string} fillStyle This argument is string for color.
-     * @return {ArtCanvas} This is returned for method chain.
-     */
-    ArtCanvas.prototype.setFillStyle = function(fillStyle) {
-        var canvas = this.layers[this.activeLayer];
-        canvas.setFillStyle(fillStyle);
-
-        return this;
-    };
-
-    /**
-     * This method gets stroke color to HTMLCanvasElement in the target layer.
-     * @return {string} This is returned as stroke color to HTMLCanvasElement in the target layer.
-     */
-    ArtCanvas.prototype.getStrokeStyle = function() {
-        var canvas = this.layers[this.activeLayer];
-        return canvas.getStrokeStyle();
-    };
-
-    /**
-     * This method sets stroke color to HTMLCanvasElement in the target layer.
-     * @param {string} strokeStyle This argument is string for color.
-     * @return {ArtCanvas} This is returned for method chain.
-     */
-    ArtCanvas.prototype.setStrokeStyle = function(strokeStyle) {
-        var canvas = this.layers[this.activeLayer];
-        canvas.setStrokeStyle(strokeStyle);
-
-        return this;
-    };
-
-    /**
-     * This method gets line width to HTMLCanvasElement in the target layer.
-     * @return {number} This is returned as line width to HTMLCanvasElement in the target layer.
-     */
-    ArtCanvas.prototype.getLineWidth = function() {
-        var canvas = this.layers[this.activeLayer];
-        return canvas.getLineWidth();
-    };
-
-    /**
-     * This method sets line width to HTMLCanvasElement in the target layer.
-     * @param {number} lineWidth This argument is number for line width.
-     * @return {ArtCanvas} This is returned for method chain.
-     */
-    ArtCanvas.prototype.setLineWidth = function(lineWidth) {
-        var canvas = this.layers[this.activeLayer];
-        canvas.setLineWidth(lineWidth);
-
-        return this;
-    };
-
-    /**
-     * This method is getter for the instance of TextStyle.
-     * @return {TextStyle} This is returned as the instance of TextStyle.
-     */
-    ArtCanvas.prototype.getTextStyle = function() {
-        return this.textStyle;
-    };
-
-    /**
-     * This method is setter for the instance of TextStyle.
-     * @param{TextStyle} textStyle This argument is the instance of TextStyle.
-     * @return {ArtCanvas} This is returned for method chain.
-     */
-    ArtCanvas.prototype.setTextStyle = function(textStyle) {
-        if (textStyle instanceof ArtCanvas.TextStyle) {
-            this.textStyle = textStyle;
-        }
-
-        return this;
-    };
-
-    /**
-     * This method is getter for string that is defined by Transform class.
-     * @return {string} This is returned as string that is defined by Transform class.
-     */
-    ArtCanvas.prototype.getTransform = function() {
-        return this.transform;
-    };
-
-    /**
-     * This method is setter for string that is defined by Transform class.
-     * @param {string} transform This argument is string that is defined by Transform class.
-     * @return {ArtCanvas} This is returned for method chain.
-     */
-    ArtCanvas.prototype.setTransform = function(transform) {
-        var t = String(transform).toLowerCase();
-
-        switch (t) {
-            case ArtCanvas.Transform.TRANSLATE :
-            case ArtCanvas.Transform.SCALE     :
-            case ArtCanvas.Transform.ROTATE    :
-                this.transform = t;
-                break;
-            default :
-                break;
-        }
 
         return this;
     };
@@ -638,13 +493,144 @@
     };
 
     /**
-     * This method draws image in the target layer.
-     * @param {string} src This argument is image file path.
+     * This method gets fill color to HTMLCanvasElement in the target layer.
+     * @return {string} This is returned as fill color to HTMLCanvasElement in the target layer.
+     */
+    ArtCanvas.prototype.getFillStyle = function() {
+        var canvas = this.layers[this.activeLayer];
+        return canvas.getFillStyle();
+    };
+
+    /**
+     * This method sets fill color to HTMLCanvasElement in the target layer.
+     * @param {string} fillStyle This argument is string for color.
      * @return {ArtCanvas} This is returned for method chain.
      */
-    ArtCanvas.prototype.drawImage = function(src) {
+    ArtCanvas.prototype.setFillStyle = function(fillStyle) {
         var canvas = this.layers[this.activeLayer];
-        canvas.drawImage(src);
+        canvas.setFillStyle(fillStyle);
+
+        return this;
+    };
+
+    /**
+     * This method gets stroke color to HTMLCanvasElement in the target layer.
+     * @return {string} This is returned as stroke color to HTMLCanvasElement in the target layer.
+     */
+    ArtCanvas.prototype.getStrokeStyle = function() {
+        var canvas = this.layers[this.activeLayer];
+        return canvas.getStrokeStyle();
+    };
+
+    /**
+     * This method sets stroke color to HTMLCanvasElement in the target layer.
+     * @param {string} strokeStyle This argument is string for color.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.setStrokeStyle = function(strokeStyle) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.setStrokeStyle(strokeStyle);
+
+        return this;
+    };
+
+    /**
+     * This method gets line width to HTMLCanvasElement in the target layer.
+     * @return {number} This is returned as line width to HTMLCanvasElement in the target layer.
+     */
+    ArtCanvas.prototype.getLineWidth = function() {
+        var canvas = this.layers[this.activeLayer];
+        return canvas.getLineWidth();
+    };
+
+    /**
+     * This method sets line width to HTMLCanvasElement in the target layer.
+     * @param {number} lineWidth This argument is number for line width.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.setLineWidth = function(lineWidth) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.setLineWidth(lineWidth);
+
+        return this;
+    };
+
+    /**
+     * This method is getter for the instance of TextStyle.
+     * @return {TextStyle} This is returned as the instance of TextStyle.
+     */
+    ArtCanvas.prototype.getTextStyle = function() {
+        return this.textStyle;
+    };
+
+    /**
+     * This method is setter for the instance of TextStyle.
+     * @param{TextStyle} textStyle This argument is the instance of TextStyle.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.setTextStyle = function(textStyle) {
+        if (textStyle instanceof ArtCanvas.TextStyle) {
+            this.textStyle = textStyle;
+        }
+
+        return this;
+    };
+
+    /**
+     * This method is getter for string that is defined by Figure class.
+     * @return {string} This is returned as string that is defined by Figure class.
+     */
+    ArtCanvas.prototype.getFigure = function() {
+        return this.figure;
+    };
+
+    /**
+     * This method is setter for string that is defined by Figure class.
+     * @param {string} figure This argument is string that is defined by Figure class.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.setFigure = function(figure) {
+        var f = String(figure).toLowerCase();
+
+        switch (f) {
+            case ArtCanvas.Figure.RECTANGLE :
+            case ArtCanvas.Figure.CIRCLE    :
+            case ArtCanvas.Figure.LINE      :
+                this.figure = f;
+                break;
+            default :
+                break;
+        }
+
+        return this;
+    };
+
+    /**
+     * This method is getter for string that is defined by Transform class.
+     * @return {string} This is returned as string that is defined by Transform class.
+     */
+    ArtCanvas.prototype.getTransform = function() {
+        return this.transform;
+    };
+
+    /**
+     * This method is setter for string that is defined by Transform class.
+     * @param {string} transform This argument is string that is defined by Transform class.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.setTransform = function(transform) {
+        var t = String(transform).toLowerCase();
+
+        switch (t) {
+            case ArtCanvas.Transform.TRANSLATE :
+            case ArtCanvas.Transform.SCALE     :
+            case ArtCanvas.Transform.ROTATE    :
+                this.transform = t;
+                break;
+            default :
+                break;
+        }
+
         return this;
     };
 
@@ -683,6 +669,17 @@
         return this;
     };
 
+    /**
+     * This method draws image in the target layer.
+     * @param {string} src This argument is image file path.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.drawImage = function(src) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.drawImage(src);
+        return this;
+    };
+
     (function() {
 
         /**
@@ -696,7 +693,7 @@
         var move  = '';
         var end   = '';
 
-        //Touch Panel ?
+        // Touch Panel ?
         if (/iPhone|iPad|iPod|Android/.test(navigator.userAgent)) {
             click = 'touchend';
             start = 'touchstart';
@@ -755,6 +752,22 @@
     (function() {
 
         /**
+         * This static class defines strings for transforms.
+         */
+        function Transform() {
+        }
+
+        Transform.TRANSLATE = 'translate';
+        Transform.SCALE     = 'scale';
+        Transform.ROTATE    = 'rotate';
+
+        ArtCanvas.Transform = Transform;
+
+    })();
+
+    (function() {
+
+        /**
          * This static class defines strings for draw tools.
          */
         function Tool() {
@@ -770,16 +783,101 @@
     (function() {
 
         /**
-         * This static class defines strings for transforms.
+         * This class is to represent color.
+         * @param {number} red This argument is between 0 and 255.
+         * @param {number} green This argument is between 0 and 255.
+         * @param {number} blue This argument is between 0 and 255.
+         * @param {number} alpha This argument is between 0 and 1.
+         * @constructor
          */
-        function Transform() {
+        function Color(red, green, blue, alpha) {
+            this.red   = 0;
+            this.green = 0;
+            this.blue  = 0;
+            this.alpha = 1;
+
+            var r = parseInt(red);
+            var g = parseInt(green);
+            var b = parseInt(blue);
+            var a = parseInt(alpha);
+
+            if (!isNaN(r) && (r >= 0) && (r <= 255)) {
+                this.red = r;
+            }
+
+            if (!isNaN(g) && (g >= 0) && (g <= 255)) {
+                this.green = g;
+            }
+
+            if (!isNaN(b) && (b >= 0) && (b <= 255)) {
+                this.blue = b;
+            }
+
+            if (!isNaN(a) && (a >= 0) && (a <= 1)) {
+                this.alpha = a;
+            }
         }
 
-        Transform.TRANSLATE = 'translate';
-        Transform.SCALE     = 'scale';
-        Transform.ROTATE    = 'rotate';
+        /**
+         * This method gets value of red.
+         * @return {number} This is returned as value of red.
+         */
+        Color.prototype.getRed = function() {
+            return this.red;
+        };
 
-        ArtCanvas.Transform = Transform;
+        /**
+         * This method gets value of green.
+         * @return {number} This is returned as value of green.
+         */
+        Color.prototype.getGreen = function() {
+            return this.green;
+        };
+
+        /**
+         * This method gets value of blue.
+         * @return {number} This is returned as value of blue.
+         */
+        Color.prototype.getBlue = function() {
+            return this.blue;
+        };
+
+        /**
+         * This method gets value of alpha.
+         * @return {number} This is returned as value of alpha.
+         */
+        Color.prototype.getAlpha = function() {
+            return this.alpha;
+        };
+
+        /**
+         * This method gets color string as rgba format.
+         * @return {string} This is returned as color string as rgba format.
+         * @override
+         */
+        Color.prototype.toString = function() {
+            var rgba = 'rgba(' + this.red
+                     + ', '    + this.green
+                     + ', '    + this.blue
+                     + ', '    + this.alpha
+                     + ')';
+ 
+             return rgba;
+        };
+
+        /**
+         * This method gets color string as hex format.
+         * @return {string} This is returned as color string as hex format.
+         */
+        Color.prototype.toHexString = function() {
+            var hex = '#';
+
+            hex += this.red.toString(16) + this.green.toString(16) + this.blue.toString(16);
+
+            return hex;
+        };
+
+        ArtCanvas.Color = Color;
 
     })();
 
@@ -1187,7 +1285,7 @@
 
     (function() {
 
-        /** 
+        /**
          * This class has properties to draw on each layer.
          * Therefore, the instance is created by the number of layers.
          * The instance of ArtCanvas manages the instance of this class.
@@ -1229,19 +1327,17 @@
             this.canvas.style.left     = '0px';
             this.canvas.style.zIndex   = zIndex;
 
-            this.context.strokeStyle = 'rgba(0, 0, 0, 1.0)';
-            this.context.fillStyle   = 'rgba(0, 0, 0, 0.0)';
+            this.context.strokeStyle = new ArtCanvas.Color(0, 0, 0, 1.0).toString();
+            this.context.fillStyle   = new ArtCanvas.Color(0, 0, 0, 1.0).toString();
             this.context.globalAlpha = 1.0;
             this.context.lineWidth   = 1.0;
             this.context.lineCap     = 'round';
             this.context.lineJoin    = 'miter';
 
-            this.textStyle = new ArtCanvas.TextStyle(new ArtCanvas.Font('Arial', 'normal', '16px'), 'rgba(0, 0, 0, 1.0)');
-
             /** {@type Array.<Point|Rectangle|Circle|Line|Text>} */
             this.paths      = [];
 
-            //Transform Matrix
+            // Transform Matrix
             this.transforms = {
                 translate : {x : 0, y : 0},
                 scale     : {x : 1, y : 1},
@@ -1607,11 +1703,11 @@
             }
 
             if (event.pageX) {
-                //Desktop
+                // Desktop
             } else if (event.touches[0]) {
-                event = event.touches[0];         //Smartphone
+                event = event.touches[0];         // Touch Panel
             } else if (event.changedTouches[0]) {
-                event = event.changedTouches[0];  //Smartphone
+                event = event.changedTouches[0];  // Touch Panel
             }
 
             var scrollLeft = this.container.scrollLeft;
@@ -1636,11 +1732,11 @@
             }
 
             if (event.pageY) {
-                //Desktop
+                // Desktop
             } else if (event.touches[0]) {
-                event = event.touches[0];         //Smartphone
+                event = event.touches[0];         // Touch Panel
             } else if (event.changedTouches[0]) {
-                event = event.changedTouches[0];  //Smartphone
+                event = event.changedTouches[0];  // Touch Panel
             }
 
             var scrollTop = this.container.scrollTop;
@@ -1730,7 +1826,7 @@
                 return this;
             }
 
-            //Already exists ?
+            // Already exists ?
             if (this.container.querySelector('[type="text"]') instanceof HTMLInputElement) {
                 return this;
             }
@@ -1742,21 +1838,14 @@
 
             textbox.setAttribute('type', 'text');
 
-            var textStyle  = this.textStyle;
-            var font       = this.textStyle.getFont();
-            var color      = this.textStyle.getColor();
-            var fontFamily = font.getFamily();
-            var fontStyle  = font.getStyle();
-            var fontSize   = font.getSize();
-
             textbox.style.position   = 'absolute';
             textbox.style.top        = y + 'px';
             textbox.style.left       = x + 'px';
             textbox.style.zIndex     = parseInt(this.canvas.style.zIndex) + 1;
             textbox.style.outline    = 'none';
-            //textbox.style.fontFamily = fontFamily;
-            //textbox.style.fontStyle  = fontStyle;
-            //textbox.style.fontSize   = fontSize;
+            // textbox.style.fontFamily = fontFamily;
+            // textbox.style.fontStyle  = fontStyle;
+            // textbox.style.fontSize   = fontSize;
             textbox.style.padding    = '0.5em';
 
             this.container.appendChild(textbox);
@@ -1768,7 +1857,7 @@
 
     })();
 
-    //Export
+    // Export
     global.ArtCanvas = ArtCanvas;
 
 })(window);
