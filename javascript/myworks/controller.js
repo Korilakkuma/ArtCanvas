@@ -171,4 +171,34 @@ $(function() {
             artCanvas.setTransform(this.value);
         }
     });
+
+    $('#select-tool').change(function() {
+        var tool = this.value;
+
+        if (tool === '') {
+            artCanvas.setMode(ArtCanvas.Mode.HAND);
+            $('canvas').off('.art-canvas');
+        } else {
+            artCanvas.setMode(ArtCanvas.Mode.TOOL);
+
+            $('canvas').off('.art-canvas').on('click.art-canvas', function(event) {
+                switch (tool) {
+                    case ArtCanvas.Tool.DROPPER :
+                        var color = artCanvas.pickColor(event.originalEvent);
+                        var rgba  = color.toString();
+
+                        $('#colorpicker-fill').spectrum('set', rgba);
+                        $('#colorpicker-stroke').spectrum('set', rgba);
+                        $('#colorpicker-text').spectrum('set', rgba);
+
+                        break;
+                    case ArtCanvas.Tool.BUCKET :
+                        break;
+                    default :
+                        break;
+                }
+            });
+        }
+    });
+
 });
