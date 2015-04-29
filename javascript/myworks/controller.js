@@ -201,4 +201,9 @@ $(function() {
         }
     });
 
+    $('#select-filter').change(function() {
+        var amounts = [WIDTH, HEIGHT, 30000];
+
+        artCanvas.filter(this.value, amounts);
+    });
 });
