@@ -198,6 +198,10 @@
         };
 
         this.container.addEventListener(ArtCanvas.MouseEvents.START, function(event) {
+            if (self.mode === ArtCanvas.Mode.TOOL) {
+                return;
+            }
+
             var activeCanvas  = self.layers[self.activeLayer];
             var activeContext = activeCanvas.getContext();
 
@@ -365,6 +369,7 @@
             case ArtCanvas.Mode.HAND      :
             case ArtCanvas.Mode.FIGURE    :
             case ArtCanvas.Mode.TRANSFORM :
+            case ArtCanvas.Mode.TOOL      :
                 this.mode = m;
                 break;
             case ArtCanvas.Mode.TEXT      :
@@ -678,6 +683,18 @@
         var canvas = this.layers[this.activeLayer];
         canvas.drawImage(src);
         return this;
+    };
+
+    /**
+     * This method gets the instance of Color in the target point.
+     * @param {Event} event This argument is event object.
+     * @return {Color} This is returned as the instance of Color.
+     */
+    ArtCanvas.prototype.pickColor = function(event) {
+        var canvas = this.layers[this.activeLayer];
+        var color  = canvas.pickColor(event);
+
+        return color;
     };
 
     (function() {
@@ -1851,6 +1868,22 @@
             this.container.appendChild(textbox);
 
             return textbox;
+        };
+
+        /**
+         * This method picks the color information of designated point.
+         * @param {Event} event This argument is event object.
+         * @return {Color} This is returned as the intance of Color.
+         */
+        Canvas.prototype.pickColor = function(event) {
+            if (!(event instanceof Event)) {
+                return new ArtCanvas.Color(0, 0, 0, 1.0);
+            }
+
+            var picks = this.context.getImageData(this.getOffsetX(event), this.getOffsetY(event), 1, 1);
+            var color = new ArtCanvas.Color(picks.data[0], picks.data[1], picks.data[2], (picks.data[3] / 255));
+
+            return color;
         };
 
         ArtCanvas.Canvas = Canvas;
