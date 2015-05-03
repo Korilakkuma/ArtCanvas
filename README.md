@@ -8,10 +8,10 @@ HTML5 Canvas Library
 This library enables to create image authoring application like Photoshop.  
 In concrete, this library may be useful to implement the following features.
   
+* Layer
 * Draw (Pen, Figure, Text ..etc)
 * Styles (Color, Line Width, Text Styles ...etc)
 * Transforms (Translate, Scale, Rotate)
-* Layer
   
 ## Demo
   
@@ -59,6 +59,31 @@ Getter and Setter for these mode are the following,
     
     // Setter
     artCanvas.setMode(ArtCanvas.Mode.FIGURE);  // -> change mode to ArtCanvas.Mode.FIGURE
+  
+### Layer
+  
+#### Select
+  
+    var layerNumber = 0;  //This value is number between 0 and (the number of layers - 1)
+
+    artCanvas.selectLayer(layerNumber);
+  
+#### Add
+  
+    artCanvas.addLayer();
+  
+#### Remove
+  
+    var layerNumber = 0;  //This value is number between 0 and (the number of layers - 1)
+
+    artCanvas.removeLayer(layerNumber);
+  
+#### Show / Hide
+  
+    var layerNumber = 0;  //This value is number between 0 and (the number of layers - 1)
+
+    artCanvas.showLayer(layerNumber);
+    artCanvas.hideLayer(layerNumber);
   
 ### Draw
   
@@ -145,29 +170,4 @@ Next, it is required to designate transform type.
     artCanvas.setTransform(ArtCanvas.Transform.TRANSLATE);  // Translate
     artCanvas.setTransform(ArtCanvas.Transform.SCALE);      // Scale
     artCanvas.setTransform(ArtCanvas.Transform.ROTATE);     // Rotate
-  
-### Layer
-  
-#### Select
-  
-    var layerNumber = 0;  //This value is number between 0 and (the number of layers - 1)
-
-    artCanvas.selectLayer(layerNumber);
-  
-#### Add
-  
-    artCanvas.addLayer();
-  
-#### Remove
-  
-    var layerNumber = 0;  //This value is number between 0 and (the number of layers - 1)
-
-    artCanvas.removeLayer(layerNumber);
-  
-#### Show / Hide
-  
-    var layerNumber = 0;  //This value is number between 0 and (the number of layers - 1)
-
-    artCanvas.showLayer(layerNumber);
-    artCanvas.hideLayer(layerNumber);
   
