@@ -12,6 +12,7 @@ In concrete, this library may be useful to implement the following features.
 * Draw (Pen, Figure, Text ..etc)
 * Styles (Color, Line Width, Text Styles ...etc)
 * Transforms (Translate, Scale, Rotate)
+* Tools for drawing
   
 ## Demo
   
@@ -51,6 +52,7 @@ This library has the following modes.
     console.log(ArtCanvas.Mode.FIGURE);     // This mode is in order to draw figures
     console.log(ArtCanvas.Mode.TEXT);       // This mode is in order to draw text
     console.log(ArtCanvas.Mode.TRANSFORM);  // This mode is in order to transform drawn objects
+    console.log(ArtCanvas.Mode.TOOL);       // This mode is in order to tools for drawing
   
 Getter and Setter for these mode are the following,
   
@@ -170,4 +172,13 @@ Next, it is required to designate transform type.
     artCanvas.setTransform(ArtCanvas.Transform.TRANSLATE);  // Translate
     artCanvas.setTransform(ArtCanvas.Transform.SCALE);      // Scale
     artCanvas.setTransform(ArtCanvas.Transform.ROTATE);     // Rotate
+  
+### Tools
+  
+#### Dropper
+  
+    // Get the instance of ArtCanvas.Color
+    var color = artCanvas.pickColor(event);  // The 1st argument is event object
+    var rgba  = color.toString();            // rgba(...)
+    var hex   = color.toHexString();         // #...
   
