@@ -182,3 +182,33 @@ Next, it is required to designate transform type.
     var rgba  = color.toString();            // rgba(...)
     var hex   = color.toHexString();         // #...
   
+### Image Filters
+  
+#### Red-Emphasis
+  
+    artCanvas.filter(ArtCanvas.Filter.REDEMPHASIS);
+  
+#### Grayscale
+  
+    artCanvas.filter(ArtCanvas.Filter.GRAYSCALE);
+  
+#### Reverse
+  
+    artCanvas.filter(ArtCanvas.Filter.REVERSE);
+  
+#### Noise
+  
+    var width   = artCanvas.getContainerWidth();
+    var height  = artCanvas.getContainerHeight();
+    var noise   = 30000
+    var amounts = [width, height, noise];
+
+    artCanvas.filter(ArtCanvas.Filter.NOISE, amounts);
+  
+#### Blur
+  
+    var width   = artCanvas.getContainerWidth();
+    var amounts = [width];
+
+    artCanvas.filter(ArtCanvas.Filter.BLUR, amounts);
+  
