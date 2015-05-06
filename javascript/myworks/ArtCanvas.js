@@ -502,8 +502,10 @@
      * @return {string} This is returned as fill color to HTMLCanvasElement in the target layer.
      */
     ArtCanvas.prototype.getFillStyle = function() {
-        var canvas = this.layers[this.activeLayer];
-        return canvas.getFillStyle();
+        var canvas    = this.layers[this.activeLayer];
+        var fillStyle = canvas.getFillStyle();
+
+        return fillStyle;
     };
 
     /**
@@ -523,8 +525,10 @@
      * @return {string} This is returned as stroke color to HTMLCanvasElement in the target layer.
      */
     ArtCanvas.prototype.getStrokeStyle = function() {
-        var canvas = this.layers[this.activeLayer];
-        return canvas.getStrokeStyle();
+        var canvas      = this.layers[this.activeLayer];
+        var strokeStyle = canvas.getStrokeStyle();
+
+        return strokeStyle;
     };
 
     /**
@@ -544,8 +548,10 @@
      * @return {number} This is returned as line width to HTMLCanvasElement in the target layer.
      */
     ArtCanvas.prototype.getLineWidth = function() {
-        var canvas = this.layers[this.activeLayer];
-        return canvas.getLineWidth();
+        var canvas    = this.layers[this.activeLayer];
+        var lineWidth = canvas.getLineWidth();
+
+        return lineWidth;
     };
 
     /**
@@ -648,6 +654,7 @@
     ArtCanvas.prototype.translate = function(translateX, translateY) {
         var canvas = this.layers[this.activeLayer];
         canvas.transform(ArtCanvas.Transform.TRANSLATE, [translateX, translateY]);
+
         return this;
     };
 
@@ -660,6 +667,7 @@
     ArtCanvas.prototype.scale = function(scaleX, scaleY) {
         var canvas = this.layers[this.activeLayer];
         canvas.transform(ArtCanvas.Transform.SCALE, [scaleX, scaleY]);
+
         return this;
     };
 
@@ -671,6 +679,7 @@
     ArtCanvas.prototype.rotate = function(degree) {
         var canvas = this.layers[this.activeLayer];
         canvas.transform(ArtCanvas.Transform.ROTATE, [degree]);
+
         return this;
     };
 
@@ -682,6 +691,7 @@
     ArtCanvas.prototype.drawImage = function(src) {
         var canvas = this.layers[this.activeLayer];
         canvas.drawImage(src);
+
         return this;
     };
 
