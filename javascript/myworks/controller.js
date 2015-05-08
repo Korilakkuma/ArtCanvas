@@ -193,6 +193,10 @@ $(function() {
 
                         break;
                     case ArtCanvas.Tool.BUCKET :
+                        var tinycolor = $('#colorpicker-fill').spectrum('get');
+                        var color     = new ArtCanvas.Color(tinycolor._r, tinycolor._g, tinycolor._b, tinycolor._a);
+
+                        artCanvas.fill(event.originalEvent, color);
                         break;
                     default :
                         break;
