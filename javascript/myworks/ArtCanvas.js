@@ -732,6 +732,70 @@
         return this;
     };
 
+    /**
+     * This method exports image file by synthesizing layers.
+     * @param {string} format This argument is one of 'gif', 'jpeg', 'jpg', 'png'.
+     * @param {function} callback This argument is invoked when image file is exported.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.export = function(format, callback) {
+        if (!/gif|jpeg|jpg|png/i.test(String(format))) {
+            return this;
+        }
+
+        var exportedCanvas  = document.createElement('canvas');
+        var exportedContext = exportedCanvas.getContext('2d');
+
+        exportedCanvas.width  = this.getContainerWidth();
+        exportedCanvas.height = this.getContainerHeight();
+
+        var images       = [];
+        var layerPointer = 0;
+        var self         = this;
+
+        var draw = function() {
+            for (var i = 0, len = images.length; i < len; i++) {
+                exportedContext.drawImage(images[i], 0, 0);
+            }
+
+            if (Object.prototype.toString.call(callback) === '[object Function]') {
+                callback(exportedCanvas.toDataURL('image/' + format.toLowerCase()));
+            }
+        };
+
+        var loadImage = function() {
+            if (layerPointer >= self.layers.length) {
+                draw();
+                return;
+            }
+
+            var canvas        = self.layers[layerPointer];
+            var canvasElement = canvas.getCanvas();
+
+            if (canvasElement.style.visibility === 'hidden') {
+                layerPointer++;
+                loadImage();
+                return;
+            }
+
+            var src   = canvasElement.toDataURL('image/png');
+            var image = new Image();
+
+            image.src = src;
+
+            image.onload = function() {
+                images.push(image);
+
+                layerPointer++;
+                loadImage();
+            };
+        };
+
+        loadImage();
+
+        return this;
+    };
+
     (function() {
 
         /**
