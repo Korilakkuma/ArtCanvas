@@ -210,4 +210,29 @@ $(function() {
 
         artCanvas.filter(this.value, amounts);
     });
+
+    $('#button-download').hide();
+
+    $('#button-export').on('click', function() {
+        var format = function(number) {
+            return ('0' + number).slice(-2);
+        };
+
+        var date = new Date();
+
+        var y = date.getFullYear();
+        var m = format(date.getMonth() + 1);
+        var d = format(date.getDate());
+        var h = format(date.getHours());
+        var i = format(date.getMinutes());
+        var s = format(date.getSeconds());
+
+        var filename = y + m + d + h + i + s + '.';
+
+        artCanvas.export($('#select-format').val(), function(image) {
+            $('#button-download').attr('href', image)
+                                 .attr('download', (filename + $('#select-format').val()))
+                                 .show();
+        });
+    });
 });

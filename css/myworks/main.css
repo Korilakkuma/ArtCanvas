@@ -73,6 +73,24 @@ input, select, label {cursor:pointer;}
     display:none;
 }
 
+#button-download {
+    display:inline-block;
+    padding:0.25rem;
+    font-size:0.5rem;
+    color:#FFF;
+    text-decoration:none;
+
+    -webkit-border-radius:4px;
+       -moz-border-radius:4px;
+            border-radius:4px;
+}
+
+#button-download:active {
+    -webkit-box-shadow:0px 1px 3px rgba(0, 0, 0, 0.6) inset;
+       -moz-box-shadow:0px 1px 3px rgba(0, 0, 0, 0.6) inset;
+            box-shadow:0px 1px 3px rgba(0, 0, 0, 0.6) inset;
+}
+
 .clearfix:after {
     content:"";
     display:block;
