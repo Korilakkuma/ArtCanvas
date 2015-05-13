@@ -708,6 +708,19 @@
     };
 
     /**
+     * This method fills the enclosed part in the target layer.
+     * @param {Event} event This argument is event object.
+     * @param {Color} color This argument is the instance of Color.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.fill = function(event, color) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.fill(event, color);
+
+        return this;
+    };
+
+    /**
      * This method runs image filter in the target layer.
      * @param {string} type This argument is image filter type.
      * @param {Array.<number>} amounts This argument is the array that contains amount for image filter.
@@ -2143,6 +2156,145 @@
             var color = new ArtCanvas.Color(picks.data[0], picks.data[1], picks.data[2], (picks.data[3] / 255));
 
             return color;
+        };
+
+        /**
+         * This method fills the enclosed part.
+         * @param {Event} event This argument is event object.
+         * @param {Color} color This argument is the instance of Color.
+         * @return {Canvas} This is returned for method chain.
+         */
+        Canvas.prototype.fill = function(event, color) {
+            if (!(event instanceof Event)) {
+                return;
+            }
+
+            if (!(color instanceof ArtCanvas.Color)) {
+                return;
+            }
+
+            var width  = this.canvas.width;
+            var height = this.canvas.height;
+
+            var imagedata = this.context.getImageData(0, 0, width, height);
+
+            var startX = this.getOffsetX(event);
+            var startY = this.getOffsetY(event);
+
+            var getPixelPosition = function(x, y) {
+                return ((width * y) + x) * 4;
+            };
+
+            var setPixelPosition = function(imagedata, position, color) {
+                imagedata.data[position    ] = color.getRed();
+                imagedata.data[position + 1] = color.getGreen();
+                imagedata.data[position + 2] = color.getBlue();
+                imagedata.data[position + 3] = color.getAlpha() * 255;
+            };
+
+            var isMatchColor = function(x, y, color) {
+                var position = getPixelPosition(x, y);
+
+                if (imagedata.data[position] !== color.getRed()) {
+                    return false;
+                } else if (imagedata.data[position + 1] !== color.getGreen()) {
+                    return false;
+                } else if (imagedata.data[position + 2] !== color.getBlue()) {
+                    return false;
+                } else if (imagedata.data[position + 3] !== color.getAlpha()) {
+                    return false;
+                } else {
+                    return true;
+                }
+            };
+
+            var paintHorizon = function(left, right, y) {
+                for (var x = left; x <= right; x++) {
+                    var position = getPixelPosition(x, y);
+                    setPixelPosition(imagedata, position, color);
+                }
+            };
+
+            var scanHorizon = function(left, right, y, buffer, baseColor) {
+                while (left <= right) {
+                    while (left <= right) {
+                        if (isMatchColor(left, y, baseColor)) {
+                            break;
+                        } else {
+                            left++;
+                        }
+                    }
+
+                    if (left > right) {
+                        break;
+                    }
+
+                    while (left <= right) {
+                        if (isMatchColor(left, y, baseColor)) {
+                            left++;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    buffer.push({x : (left - 1), y : y});
+                }
+            };
+
+            var startPixelPosition = getPixelPosition(startX, startY);
+
+            var baseColor = new ArtCanvas.Color(
+                imagedata.data[startPixelPosition],
+                imagedata.data[startPixelPosition + 1],
+                imagedata.data[startPixelPosition + 2],
+                imagedata.data[startPixelPosition + 3]
+            );
+
+            if (isMatchColor(startX, startY, color)) {
+                this.context.putImageData(imagedata, 0, 0);
+                return;
+            }
+
+            var buffer = [];
+            buffer.push({x : startX, y : startY});
+
+            while (buffer.length > 0) {
+                var positions = buffer.pop();
+
+                var left  = positions.x;
+                var right = positions.x;
+
+                if (isMatchColor(positions.x, positions.y, color)) {
+                    continue;
+                }
+
+                // -> left
+                while (0 < left) {
+                    if (isMatchColor((left - 1), positions.y, baseColor)) {
+                        left--;
+                    } else {
+                        break;
+                    }
+                }
+
+                // -> right
+                while (right < (this.canvas.width - 1)) {
+                    if (isMatchColor((right + 1), positions.y, baseColor)) {
+                        right++;
+                    } else {
+                        break;
+                    }
+                }
+
+                paintHorizon(left, right, positions.y);
+
+                if ((positions.y + 1) < height) {scanHorizon(left, right, (positions.y + 1), buffer, baseColor);}
+                if ((positions.y - 1) >= 0)     {scanHorizon(left, right, (positions.y - 1), buffer, baseColor);}
+            }
+
+            this.context.putImageData(imagedata, 0, 0);
+
+            return this;
         };
 
         /**
