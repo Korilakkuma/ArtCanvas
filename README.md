@@ -182,6 +182,10 @@ Next, it is required to designate transform type.
     var rgba  = color.toString();            // rgba(...)
     var hex   = color.toHexString();         // #...
   
+#### Bucket
+  
+    artCanvas.fill(event, 'rgba(255, 0, 0, 1.0)');  // The 1st argument is event object
+  
 ### Image Filters
   
 #### Red-Emphasis
