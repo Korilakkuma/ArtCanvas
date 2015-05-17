@@ -216,3 +216,12 @@ Next, it is required to designate transform type.
 
     artCanvas.filter(ArtCanvas.Filter.BLUR, amounts);
   
+### Export
+  
+    var format   = 'png';  // one of 'gif', 'jpg', 'png'
+    var callback = function(image) {
+        // The 1st argument is Data URL of exported image
+    };
+
+    artCanvas.export(format, callback);
+  
