@@ -99,6 +99,12 @@ $(function() {
         artCanvas.setLineWidth(this.valueAsNumber);
     });
 
+    $('[name="radio-line-cap"]').on(ArtCanvas.MouseEvents.CLICK, function() {
+        if (this.checked) {
+            artCanvas.setLineCap(this.value);
+        }
+    });
+
     $('#checkbox-text-mode').on(ArtCanvas.MouseEvents.CLICK, function() {
         if (this.checked) {
             artCanvas.setMode(ArtCanvas.Mode.TEXT);
