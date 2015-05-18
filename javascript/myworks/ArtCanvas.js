@@ -567,6 +567,30 @@
     };
 
     /**
+     * This method gets line cap in the target layer.
+     * @return {string} This is one of 'butt', 'round', 'square'.
+     */
+    ArtCanvas.prototype.getLineCap = function() {
+        var canvas  = this.layers[this.activeLayer];
+        var lineCap = canvas.getLineCap();
+
+        return lineCap;
+    };
+
+
+    /**
+     * This method sets line cap in the target layer.
+     * @param {string} lineCap This argument is one of 'butt', 'round', 'square'.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.setLineCap = function(lineCap) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.setLineCap(lineCap);
+
+        return this;
+    };
+
+    /**
      * This method is getter for the instance of TextStyle.
      * @return {TextStyle} This is returned as the instance of TextStyle.
      */
@@ -1682,11 +1706,11 @@
             this.context.fillStyle   = new ArtCanvas.Color(0, 0, 0, 1.0).toString();
             this.context.globalAlpha = 1.0;
             this.context.lineWidth   = 1.0;
-            this.context.lineCap     = 'round';
+            this.context.lineCap     = 'butt';
             this.context.lineJoin    = 'miter';
 
             /** {@type Array.<Point|Rectangle|Circle|Line|Text>} */
-            this.paths      = [];
+            this.paths = [];
 
             // Transform Matrix
             this.transforms = {
@@ -2031,7 +2055,7 @@
 
         /**
          * This method sets line width.
-         * @param {number} lineWidth This argument is line width
+         * @param {number} lineWidth This argument is line width.
          * @return {Canvas} This is returned for method chain.
          */
         Canvas.prototype.setLineWidth = function(lineWidth) {
@@ -2041,6 +2065,30 @@
                 this.context.lineWidth= w;
                 this.draw(true);
             }
+
+            return this;
+        };
+
+        /**
+         * This method gets line cap.
+         * @return {string} This is one of 'butt', 'round', 'square'.
+         */
+        Canvas.prototype.getLineCap = function() {
+            return this.context.lineCap;
+        };
+
+        /**
+         * This method sets line cap.
+         * @param {string} lineCap This argument is one of 'butt', 'round', 'square'.
+         * @return {Canvas} This is returned for method chain.
+         */
+        Canvas.prototype.setLineCap = function(lineCap) {
+            if (!/butt|round|square/i.test(String(lineCap))) {
+                return this;
+            }
+
+            this.context.lineCap = lineCap.toLowerCase();
+            this.draw(true);
 
             return this;
         };
