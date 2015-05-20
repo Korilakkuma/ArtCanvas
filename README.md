@@ -135,16 +135,24 @@ In the case of drawing image,
   
 ### Styles
   
-#### fill style / stroke style / line width
+#### fill style / stroke style
   
 It is required that color string (hex, rgb, hsl, rgba, hsla ...etc) is designated for fill style and stroke style.
   
     artCanvas.setFillStyle('rgba(0, 0, 255, 1.0)');    // fill style
     artCanvas.setStrokeStyle('rgba(255, 0, 0, 1.0)');  // stroke style
   
-It is required that number is designated for line width.
+#### line width
   
-    artCanvas.setLineWidth(3);  //line width
+    var lineWidth = 3;  // This value is greater than or equal to 0
+
+    artCanvas.setLineWidth(lineWidth);
+  
+#### line cap
+  
+    var lineCap = 'round';  // one of 'butt', 'round', 'square'
+
+    artCanvas.setLineCap(lineCap);
   
 #### Text style
   
