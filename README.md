@@ -16,7 +16,7 @@ In concrete, this library may be useful to implement the following features.
   
 ## Demo
   
-[Art Canvas](http://korilakkuma.github.io/ArtCanvas/)
+* [Art Canvas](http://korilakkuma.github.io/ArtCanvas/)
   
 ## Usage
   
@@ -66,7 +66,7 @@ Getter and Setter for these mode are the following,
   
 #### Select
   
-    var layerNumber = 0;  //This value is number between 0 and (the number of layers - 1)
+    var layerNumber = 0;  // This value is number between 0 and (the number of layers - 1)
 
     artCanvas.selectLayer(layerNumber);
   
@@ -76,13 +76,13 @@ Getter and Setter for these mode are the following,
   
 #### Remove
   
-    var layerNumber = 0;  //This value is number between 0 and (the number of layers - 1)
+    var layerNumber = 0;  // This value is number between 0 and (the number of layers - 1)
 
     artCanvas.removeLayer(layerNumber);
   
 #### Show / Hide
   
-    var layerNumber = 0;  //This value is number between 0 and (the number of layers - 1)
+    var layerNumber = 0;  // This value is number between 0 and (the number of layers - 1)
 
     artCanvas.showLayer(layerNumber);
     artCanvas.hideLayer(layerNumber);
@@ -160,13 +160,13 @@ It is required that color string (hex, rgb, hsl, rgba, hsla ...etc) is designate
     var fontStyle  = 'oblique';
     var fontSize   = '24px'
 
-    //Create the instance of ArtCanvas.Font
+    // Create the instance of ArtCanvas.Font
     var font = new ArtCanvas.Font(fontFamily, fontStyle, fontSize);
 
     // color string (hex, rgb, hsl, rgba, hsla ...etc)
     var color = 'rgba(153, 153, 153, 1.0)';
 
-    //Set the instance of ArtCanvas.TextStyle
+    // Set the instance of ArtCanvas.TextStyle
     artCanvas.setTextStyle(new ArtCanvas.TextStyle(font, color));
   
 ### Transforms
