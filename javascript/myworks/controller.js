@@ -105,6 +105,12 @@ $(function() {
         }
     });
 
+    $('[name="radio-line-join"]').on(ArtCanvas.MouseEvents.CLICK, function() {
+        if (this.checked) {
+            artCanvas.setLineJoin(this.value);
+        }
+    });
+
     $('#checkbox-text-mode').on(ArtCanvas.MouseEvents.CLICK, function() {
         if (this.checked) {
             artCanvas.setMode(ArtCanvas.Mode.TEXT);
