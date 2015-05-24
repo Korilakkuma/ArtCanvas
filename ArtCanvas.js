@@ -577,7 +577,6 @@
         return lineCap;
     };
 
-
     /**
      * This method sets line cap in the target layer.
      * @param {string} lineCap This argument is one of 'butt', 'round', 'square'.
@@ -586,6 +585,29 @@
     ArtCanvas.prototype.setLineCap = function(lineCap) {
         var canvas = this.layers[this.activeLayer];
         canvas.setLineCap(lineCap);
+
+        return this;
+    };
+
+    /**
+     * This method gets line join in the target layer.
+     * @return {string} This is one of 'bevel', 'round', 'miter'.
+     */
+    ArtCanvas.prototype.getLineJoin = function() {
+        var canvas   = this.layers[this.activeLayer];
+        var lineJoin = canvas.getLineJoin();
+
+        return lineJoin;
+    };
+
+    /**
+     * This method sets line join in the target layer.
+     * @param {string} lineJoin This argument is one of 'bevel', 'round', 'miter'.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.setLineJoin = function(lineJoin) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.setLineJoin(lineJoin);
 
         return this;
     };
@@ -2088,6 +2110,30 @@
             }
 
             this.context.lineCap = lineCap.toLowerCase();
+            this.draw(true);
+
+            return this;
+        };
+
+        /**
+         * This method gets line join.
+         * @return {string} This is one of 'bevel', 'round', 'miter'.
+         */
+        Canvas.prototype.getLineJoin = function() {
+            return this.context.lineJoin;
+        };
+
+        /**
+         * This method sets line join.
+         * @param {string} lineJoin This argument is one of 'bevel', 'round', 'miter'.
+         * @return {Canvas} This is returned for method chain.
+         */
+        Canvas.prototype.setLineJoin = function(lineJoin) {
+            if (!/bevel|round|miter/i.test(String(lineJoin))) {
+                return this;
+            }
+
+            this.context.lineJoin = lineJoin.toLowerCase();
             this.draw(true);
 
             return this;
