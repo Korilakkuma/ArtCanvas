@@ -154,6 +154,12 @@ It is required that color string (hex, rgb, hsl, rgba, hsla ...etc) is designate
 
     artCanvas.setLineCap(lineCap);
   
+#### line join
+  
+    var lineJoin = 'round';  // one of 'bevel', 'round', 'miter'
+
+    artCanvas.setLineJoin(lineCap);
+  
 #### Text style
   
     var fontFamily = 'Helvetica';
