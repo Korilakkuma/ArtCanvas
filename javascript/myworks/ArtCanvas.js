@@ -613,6 +613,98 @@
     };
 
     /**
+     * This method gets shadow color in the target layer.
+     * @return {string} This is returned as shadow color.
+     */
+    ArtCanvas.prototype.getShadowColor = function() {
+        var canvas      = this.layers[this.activeLayer];
+        var shadowColor = canvas.getShadowColor();
+
+        return shadowColor;
+    };
+
+    /**
+     * This method sets shadow color in the target layer.
+     * @param {string} shadowColor This argument is string for color.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.setShadowColor = function(shadowColor) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.setShadowColor(shadowColor);
+
+        return this;
+    };
+
+    /**
+     * This method gets shadow blur in the target layer.
+     * @return {string} This is returned as shadow blur.
+     */
+    ArtCanvas.prototype.getShadowBlur = function() {
+        var canvas     = this.layers[this.activeLayer];
+        var shadowBlur = canvas.getShadowBlur();
+
+        return shadowBlur;
+    };
+
+    /**
+     * This method sets shadow blur in the target layer.
+     * @param {number} shadowBlur This argument is shadow blur.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.setShadowBlur = function(shadowBlur) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.setShadowBlur(shadowBlur);
+
+        return this;
+    };
+
+    /**
+     * This method gets horizontal shadow offset in the target layer.
+     * @return {number} This is returned as horizontal shadow offset.
+     */
+    ArtCanvas.prototype.getShadowOffsetX = function() {
+        var canvas  = this.layers[this.activeLayer];
+        var offsetX = canvas.getShadowOffsetX();
+
+        return offsetX;
+    };
+
+    /**
+     * This method sets horizontal shadow offset in the target layer.
+     * @param {number} offsetX This argument is horizontal shadow offset.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.setShadowOffsetX = function(offsetX) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.setShadowOffsetX(offsetX);
+
+        return this;
+    };
+
+    /**
+     * This method gets vertical shadow offset in the target layer.
+     * @return {number} This is returned as vertical shadow offset.
+     */
+    ArtCanvas.prototype.getShadowOffsetY = function() {
+        var canvas = this.layers[this.activeLayer];
+        var offsetY = canvas.getShadowOffsetY();
+
+        return offsetY;
+    };
+
+    /**
+     * This method sets vertical shadow offset in the target layer.
+     * @param {number} offsetY This argument is vertical shadow offset.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.setShadowOffsetY = function(offsetY) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.setShadowOffsetY(offsetY);
+
+        return this;
+    };
+
+    /**
      * This method is getter for the instance of TextStyle.
      * @return {TextStyle} This is returned as the instance of TextStyle.
      */
@@ -2135,6 +2227,98 @@
 
             this.context.lineJoin = lineJoin.toLowerCase();
             this.draw(true);
+
+            return this;
+        };
+
+        /**
+         * This method gets shadow color.
+         * @return {string} This is returned as shadow color.
+         */
+        Canvas.prototype.getShadowColor = function() {
+            return this.context.shadowColor;
+        };
+
+        /**
+         * This method sets shadow color.
+         * @param {string} shadowColor This argument is string for color.
+         * @return {Canvas} This is returned for method chain.
+         */
+        Canvas.prototype.setShadowColor = function(shadowColor) {
+            this.context.shadowColor = String(shadowColor);
+            this.draw(true);
+
+            return this;
+        };
+
+        /**
+         * This method gets shadow blur.
+         * @return {string} This is returned as shadow blur.
+         */
+        Canvas.prototype.getShadowBlur = function() {
+            return this.context.shadowBlur;
+        };
+
+        /**
+         * This method sets shadow blur.
+         * @param {number} shadowBlur This argument is shadow blur.
+         * @return {Canvas} This is returned for method chain.
+         */
+        Canvas.prototype.setShadowBlur = function(shadowBlur) {
+            var b = parseFloat(shadowBlur);
+
+            if (b >= 0) {
+                this.context.shadowBlur = b;
+                this.draw(true);
+            }
+
+            return this;
+        };
+
+        /**
+         * This method gets horizontal shadow offset.
+         * @return {number} This is returned as horizontal shadow offset.
+         */
+        Canvas.prototype.getShadowOffsetX = function() {
+            return this.context.shadowOffsetX;
+        };
+
+        /**
+         * This method sets horizontal shadow offset.
+         * @param {number} offsetX This argument is horizontal shadow offset.
+         * @return {Canvas} This is returned for method chain.
+         */
+        Canvas.prototype.setShadowOffsetX = function(offsetX) {
+            var x = parseFloat(offsetX);
+
+            if (!isNaN(x)) {
+                this.context.shadowOffsetX = x;
+                this.draw(true);
+            }
+
+            return this;
+        };
+
+        /**
+         * This method gets vertical shadow offset.
+         * @return {number} This is returned as vertical shadow offset.
+         */
+        Canvas.prototype.getShadowOffsetY = function() {
+            return this.context.shadowOffsetY;
+        };
+
+        /**
+         * This method sets vertical shadow offset.
+         * @param {number} offsetY This argument is vertical shadow offset.
+         * @return {Canvas} This is returned for method chain.
+         */
+        Canvas.prototype.setShadowOffsetY = function(offsetY) {
+            var y = parseFloat(offsetY);
+
+            if (!isNaN(y)) {
+                this.context.shadowOffsetY = y;
+                this.draw(true);
+            }
 
             return this;
         };
