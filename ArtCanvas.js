@@ -20,7 +20,7 @@
      * @param {HTMLCanvasElement} canvas This argument is the instance of HTMLCanvasElement as the first layer.
      * @param {number} width This argument is canvas width. The default value is 300 (px).
      * @param {number} height This argument is canvas height. The default value is 300 (px).
-     * @param {Object.<function>} callbacks This argument is associative array that has callback functions.
+     * @param {Object.<string, function>} callbacks This argument is associative array that has callback functions.
      * @constructor
      */
     function ArtCanvas(container, canvas, width, height, callbacks) {
@@ -53,7 +53,7 @@
 
         this.activeLayer = 0;
 
-        /** {@type Object.<function>} */
+        /** {@type Object.<string, function>} */
         this.callbacks = {
             drawstart   : function() {},
             drawmove    : function() {},
@@ -332,7 +332,7 @@
 
     /**
      * This method registers callbacks.
-     * @param {Object.<function>} callbacks This argument is associative array that has callback functions.
+     * @param {Object.<string, function>} callbacks This argument is associative array that has callback functions.
      * @return {ArtCanvas} This is returned for method chain.
      */
     ArtCanvas.prototype.setCallbacks = function(callbacks) {
