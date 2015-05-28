@@ -21,7 +21,7 @@ body {
 
 body > div:first-child {
     margin:2rem auto;
-    width:900px;
+    width:1200px;
 }
 
 #canvas-container {
@@ -64,7 +64,7 @@ body > div:first-child {
 
     border:none;
     padding:1.5rem;
-    width:360px;
+    width:430px;
     background-color:rgba(102, 102, 102, 1.0);
 }
 

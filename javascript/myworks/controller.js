@@ -1,7 +1,7 @@
 $(function() {
 
-    var WIDTH  = 480;
-    var HEIGHT = 480;
+    var WIDTH  = 600;
+    var HEIGHT = 600;
 
     var PALLETE = [
         ['rgb(255,   0, 0)', 'rgb(  0, 255,   0)', 'rgb(  0,   0, 255)'],
@@ -109,6 +109,32 @@ $(function() {
         if (this.checked) {
             artCanvas.setLineJoin(this.value);
         }
+    });
+
+    $('#colorpicker-shadow').spectrum({
+        preferredFormat      : 'rgb',
+        color                : 'rgba(0, 0, 0, 1.0)',
+        allowEmpty           : true,
+        showInput            : true,
+        showAlpha            : true,
+        showPalette          : true,
+        pallete              : PALLETE,
+        showSelectionPalette : true,
+        hide                 : function(color) {
+            artCanvas.setShadowColor(color.toRgbString());
+        }
+    });
+
+    $('#number-shadow-blur').change(function() {
+        artCanvas.setShadowBlur(this.valueAsNumber);
+    });
+
+    $('#number-shadow-offset-x').change(function() {
+        artCanvas.setShadowOffsetX(this.valueAsNumber);
+    });
+
+    $('#number-shadow-offset-y').change(function() {
+        artCanvas.setShadowOffsetY(this.valueAsNumber);
     });
 
     $('#checkbox-text-mode').on(ArtCanvas.MouseEvents.CLICK, function() {
