@@ -175,6 +175,18 @@ It is required that color string (hex, rgb, hsl, rgba, hsla ...etc) is designate
     // Set the instance of ArtCanvas.TextStyle
     artCanvas.setTextStyle(new ArtCanvas.TextStyle(font, color));
   
+#### Shadow Effect
+  
+    var shadowColor   = 'rgba(0, 0, 0, 0.2)';  // Color string (hex, rgb, hsl, rgba, hsla ...etc)
+    var shadowBlur    = 3;                     // This value is greater than or equal to 0.
+    var shadowOffsetX = -3;
+    var shadowOffsetY = -3;
+
+    artCanvas.setShadowColor(shadowColor);
+    artCanvas.setShadowBlur(shadowBlur);
+    artCanvas.setShadowOffsetX(shadowOffsetX);
+    artCanvas.setShadowOffsetY(shadowOffsetY);
+  
 ### Transforms
   
 The first, it is required to change the application mode.
