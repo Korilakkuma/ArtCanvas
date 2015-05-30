@@ -144,7 +144,7 @@ It is required that color string (hex, rgb, hsl, rgba, hsla ...etc) is designate
   
 #### line width
   
-    var lineWidth = 3;  // This value is greater than or equal to 0
+    var lineWidth = 3;  // This value is greater than 0
 
     artCanvas.setLineWidth(lineWidth);
   
