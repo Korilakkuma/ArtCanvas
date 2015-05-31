@@ -205,11 +205,18 @@
             var activeCanvas  = self.layers[self.activeLayer];
             var activeContext = activeCanvas.getContext();
 
+            if (self.mode === ArtCanvas.Mode.ERASER) {
+                activeContext.globalCompositeOperation = 'destination-out';
+            } else {
+                activeContext.globalCompositeOperation = 'source-over';
+            }
+
             var x = activeCanvas.getOffsetX(event);
             var y = activeCanvas.getOffsetY(event);
 
             switch (self.mode) {
-                case ArtCanvas.Mode.HAND :
+                case ArtCanvas.Mode.HAND   :
+                case ArtCanvas.Mode.ERASER :
                     activeContext.beginPath();
                     activeContext.moveTo(x, y);
                     break;
@@ -247,7 +254,8 @@
             var y = activeCanvas.getOffsetY(event);
 
             switch (self.mode) {
-                case ArtCanvas.Mode.HAND :
+                case ArtCanvas.Mode.HAND   :
+                case ArtCanvas.Mode.ERASER :
                     var points = activeCanvas.paths.pop();
                     var point  = points.pop();
 
@@ -257,7 +265,18 @@
                     activeContext.stroke();
 
                     points.push(point);
-                    points.push(new ArtCanvas.Point(x, y));
+
+                    switch (self.mode) {
+                        case ArtCanvas.Mode.HAND :
+                            points.push(new ArtCanvas.Point(x, y));
+                            break;
+                        case ArtCanvas.Mode.ERASER :
+                            points.push(new ArtCanvas.Eraser(new ArtCanvas.Point(x, y)));
+                            break;
+                        default :
+                            break;
+                    }
+
                     activeCanvas.paths.push(points);
                     break;
                 case ArtCanvas.Mode.TEXT :
@@ -288,7 +307,10 @@
 
             switch (self.mode) {
                 case ArtCanvas.Mode.HAND   :
-                    break
+                    break;
+                case ArtCanvas.Mode.ERASER :
+                    activeContext.globalCompositeOperation = 'source-over';
+                    break;
                 case ArtCanvas.Mode.FIGURE :
                     _figure(activeCanvas, activeContext, x, y, event.type);
                     imagedata = null;
@@ -368,6 +390,7 @@
         switch (m) {
             case ArtCanvas.Mode.HAND      :
             case ArtCanvas.Mode.FIGURE    :
+            case ArtCanvas.Mode.ERASER    :
             case ArtCanvas.Mode.TRANSFORM :
             case ArtCanvas.Mode.TOOL      :
                 this.mode = m;
@@ -980,6 +1003,7 @@
         Mode.HAND      = 'hand';
         Mode.FIGURE    = 'figure';
         Mode.TEXT      = 'text';
+        Mode.ERASER    = 'eraser';
         Mode.TOOL      = 'tool';
         Mode.TRANSFORM = 'transform';
 
@@ -1540,6 +1564,56 @@
     (function() {
 
         /**
+         * This class is defined for the feature of eraser.
+         * @param {Point} point This argumnet is the instance of Point
+         */
+        function Eraser(point) {
+            this.point = null;
+
+            if (point instanceof ArtCanvas.Point) {
+                this.point = point;
+            }
+        }
+
+        /**
+         * This method is getter for the instance of Point.
+         * @return {Point} This is returned as the instance of Point.
+         */
+        Eraser.prototype.getPoint = function() {
+            return this.point;
+        };
+
+        /**
+         * This method is getter for horizontal coordinate.
+         * @return {number} This is returned as horizontal coordinate.
+         */
+        Eraser.prototype.getX = function() {
+            if (this.point instanceof ArtCanvas.Point) {
+                return this.point.getX();
+            } else {
+                return 0;
+            }
+        };
+
+        /**
+         * This method is getter for vertical coordinate.
+         * @return {number} This is returned as vertical coordinate.
+         */
+        Eraser.prototype.getY = function() {
+            if (this.point instanceof ArtCanvas.Point) {
+                return this.point.getY();
+            } else {
+                return 0;
+            }
+        };
+
+        ArtCanvas.Eraser = Eraser;
+
+    })();
+
+    (function() {
+
+        /**
          * This class is to run image filter.
          * @param {string} type This argument is image filter type.
          * @param {Array.<number>} amounts This argument is the array that contains amount for image filter.
@@ -1870,12 +1944,20 @@
                         var x    = path.getX();
                         var y    = path.getY();
 
+                        if (path instanceof ArtCanvas.Eraser) {
+                            this.context.globalCompositeOperation = 'destination-out';
+                        }
+
                         if (j === 0) {
                             this.context.beginPath();
                             this.context.moveTo(x, y);
                         } else {
                             this.context.lineTo(x, y);
                             this.context.stroke();
+                        }
+
+                        if (path instanceof ArtCanvas.Eraser) {
+                            this.context.globalCompositeOperation = 'source-over';
                         }
                     }
                 } else if (paths instanceof ArtCanvas.Rectangle) {
