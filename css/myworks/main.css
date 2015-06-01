@@ -50,7 +50,7 @@ body > div:first-child {
     margin-left:0.5rem;
     border:none;
     padding:1.5rem;
-    height:200px;
+    height:230px;
 
     background-color:rgba(102, 102, 102, 1.0);
 }
@@ -73,7 +73,7 @@ body > div:first-child {
     margin-right:0.5rem;
 }
 
-[type="radio"] {
+[type="checkbox"], [type="radio"] {
     vertical-align:0.1rem;
 }
 

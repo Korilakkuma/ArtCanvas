@@ -111,6 +111,14 @@ $(function() {
         }
     });
 
+    $('#checkbox-toggle-eraser').on(ArtCanvas.MouseEvents.CLICK, function() {
+        if (this.checked) {
+            artCanvas.setMode(ArtCanvas.Mode.ERASER);
+        } else {
+            artCanvas.setMode(ArtCanvas.Mode.HAND);
+        }
+    });
+
     $('#colorpicker-shadow').spectrum({
         preferredFormat      : 'rgb',
         color                : 'rgba(0, 0, 0, 1.0)',
