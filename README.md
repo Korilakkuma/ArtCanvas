@@ -133,6 +133,12 @@ In the case of drawing image,
 
     artCanvas.drawImage(src);
   
+#### Eraser
+  
+In the case of using eraser,
+  
+    artCanvas.setMode(ArtCanvas.Mode.ERASER);
+  
 ### Styles
   
 #### fill style / stroke style
