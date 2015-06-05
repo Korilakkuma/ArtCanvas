@@ -77,12 +77,17 @@ body > div:first-child {
     vertical-align:0.1rem;
 }
 
-input, select, label {
+input, select, button, label {
     cursor:pointer;
 }
 
 [type="file"] {
     display:none;
+}
+
+.button-remove-layer {
+    margin-left:0.5rem;
+    vertical-align:0.15rem;
 }
 
 #button-download {

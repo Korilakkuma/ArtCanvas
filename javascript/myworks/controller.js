@@ -25,10 +25,10 @@ $(function() {
         showlayer   : function() {},
         hidelayer   : function() {},
         addlayer    : function(activeCanvas, activeLayer) {
-            activeLayer++;
-
             var dd = $('<dd />').append('<input type="checkbox" value="' + activeLayer + '" checked />')
-                                .append('<label><input type="radio" name="radio-layer" value="' + activeLayer + '" checked />Layer ' + activeLayer + '</label>');
+                                .append('<label><input type="radio" name="radio-layer" value="' + activeLayer + '" checked />Layer ' + (activeLayer + 1) + '</label>')
+                                .append('<button type="button" class="button-remove-layer">Remove</button>');
+
             $('#button-add-layer').parent('dd').after(dd);
         },
         removelayer : function() {}
@@ -50,7 +50,7 @@ $(function() {
     artCanvas.setCallbacks(callbacks);
 
     $('[name="form-layer"]').on(ArtCanvas.MouseEvents.CLICK, '[type="checkbox"]', function() {
-        var layerNumber = parseInt(this.value) - 1;
+        var layerNumber = parseInt(this.value);
 
         if (this.checked) {
             artCanvas.showLayer(layerNumber);
@@ -60,11 +60,36 @@ $(function() {
     });
 
     $('[name="form-layer"]').on(ArtCanvas.MouseEvents.CLICK, '[type="radio"]', function() {
-        artCanvas.selectLayer(parseInt(this.value) - 1);
+        artCanvas.selectLayer(parseInt(this.value));
     });
 
     $('#button-add-layer').on(ArtCanvas.MouseEvents.CLICK, function() {
         artCanvas.addLayer(WIDTH, HEIGHT);
+    });
+
+    $('[name="form-layer"]').on( ArtCanvas.MouseEvents.CLICK, '.button-remove-layer', function() {
+        var dd          = $(this).parent('dd');
+        var layerNumber = parseInt(dd.children('[type="checkbox"]').val());
+
+        artCanvas.removeLayer(layerNumber);
+
+        dd.remove();
+
+        var layers         = $('#button-add-layer').parent('dd').nextAll('dd');
+        var numberOfLayers = layers.length;
+        var activeLayer    = artCanvas.getActiveLayer();
+
+        layers.each(function(index, element) {
+            var layerNumber = numberOfLayers - index - 1;
+            var checked     = $(element).children('[type="checkbox"]').prop('checked');
+
+            $(element).empty().append('<input type="checkbox" value="' + layerNumber + '" ' + (checked ? 'checked' : '') + ' />')
+                              .append('<label><input type="radio" name="radio-layer" value="' + layerNumber + '" ' + ((layerNumber === activeLayer) ? 'checked' : '') + ' />Layer ' + (layerNumber + 1) + '</label>');
+
+            if (layerNumber > 0) {
+                $(element).append('<button type="button" class="button-remove-layer">Remove</button>');
+            }
+        });
     });
 
     $('#colorpicker-fill').spectrum({
