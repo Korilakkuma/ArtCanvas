@@ -412,25 +412,22 @@
     };
 
     /**
-     * This method validates layer number that is designated.
-     * Then, if this number is valid, the designated callback is invoked.
-     * @param {number} layerNumber This argument is layer number from 0.
-     * @param {function} callback This argument is invoked if the designated number is valid.
-     *     So, this function operates layer. For example, select, create, add, remove...etc.
-     * @returns {boolean} If the designated number is valid, this value is true. Otherwise, this value is false.
+     * This method gets active layer number.
+     * @return {number} This is returned as active layer number.
      */
-    ArtCanvas.prototype.validateLayerNumer = function(layerNumber, callback) {
-        var index = parseInt(layerNumber);
+    ArtCanvas.prototype.getActiveLayer = function() {
+        return this.activeLayer;
+    };
 
-        if ((index >= 0) && (index < this.layers.length)) {
-            if (Object.prototype.toString.call(callback) === '[object Function]') {
-                callback(index);
-            }
+    /**
+     * This method validates the designated layer number.
+     * @param {number} layerNumber This argument is layer number from 0.
+     * @return {boolean} If the designated number is valid, this value is true. Otherwise, this value is false.
+     */
+    ArtCanvas.prototype.validateLayerNumber = function(layerNumber) {
+        var n = parseInt(layerNumber);
 
-            return true;
-        } else {
-            return false;
-        }
+        return (n >= 0) && (n < this.layers.length);
     };
 
     /**
@@ -439,10 +436,12 @@
      * @return {ArtCanvas} This is returned for method chain.
      */
     ArtCanvas.prototype.selectLayer = function(layerNumber) {
-        this.validateLayerNumer(layerNumber, function(index) {
-            this.activeLayer = index;
-            this.callbacks.selectlayer(index);
-        }.bind(this));
+        if (this.validateLayerNumber(layerNumber)) {
+            var n = parseInt(layerNumber);
+
+            this.activeLayer = n;
+            this.callbacks.selectlayer(n);
+        }
 
         return this;
     };
@@ -453,14 +452,15 @@
      * @return {ArtCanvas} This is returned for method chain.
      */
     ArtCanvas.prototype.showLayer = function(layerNumber) {
-        this.validateLayerNumer(layerNumber, function(index) {
-            var canvas        = this.layers[index];
+        if (this.validateLayerNumber(layerNumber)) {
+            var n             = parseInt(layerNumber);
+            var canvas        = this.layers[n];
             var canvasElement = canvas.getCanvas();
 
             canvasElement.style.visibility = 'visible';
 
-            this.callbacks.showlayer(canvas, index);
-        }.bind(this));
+            this.callbacks.showlayer(canvas, n);
+        }
 
         return this;
     };
@@ -471,14 +471,15 @@
      * @return {ArtCanvas} This is returned for method chain.
      */
     ArtCanvas.prototype.hideLayer = function(layerNumber) {
-        this.validateLayerNumer(layerNumber, function(index) {
-            var canvas        = this.layers[index];
+        if (this.validateLayerNumber(layerNumber)) {
+            var n             = parseInt(layerNumber);
+            var canvas        = this.layers[n];
             var canvasElement = canvas.getCanvas();
 
             canvasElement.style.visibility = 'hidden';
 
-            this.callbacks.hidelayer(canvas, index);
-        }.bind(this));
+            this.callbacks.hidelayer(canvas, n);
+        }
 
         return this;
     };
@@ -506,16 +507,21 @@
      * @return {ArtCanvas} This is returned for method chain.
      */
     ArtCanvas.prototype.removeLayer = function(layerNumber) {
-        this.validateLayerNumer(layerNumber, function(index) {
-            var canvas = this.layers[index];
+        if ((this.layers.length > 1) && this.validateLayerNumber(layerNumber)) {
+            var n             = parseInt(layerNumber);
+            var canvas        = this.layers[n];
+            var canvasElement = canvas.getCanvas();
 
-            this.layers.splice(index, 1);
-            this.activeLayer--;
+            // for GC
+            this.layers.splice(n, 1);
+            canvasElement.parentNode.removeChild(canvasElement);
 
-            this.callbacks.removelayer(canvas, index);
+            if ((this.activeLayer > 0) && (n <= this.activeLayer)) {
+                this.activeLayer--;
+            }
 
-            canvas = null;
-        }.bind(this));
+            this.callbacks.removelayer(canvas, n);
+        }
 
         return this;
     };
