@@ -85,6 +85,11 @@ input, select, button, label {
     display:none;
 }
 
+#button-add-layer + label {
+    margin-left:0.5rem;
+    font-size:0.75rem;
+}
+
 .button-remove-layer {
     margin-left:0.5rem;
     vertical-align:0.15rem;

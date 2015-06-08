@@ -92,6 +92,10 @@ $(function() {
         });
     });
 
+    $('#number-alpha').change(function() {
+        artCanvas.setGlobalAlpha(this.valueAsNumber);
+    });
+
     $('#colorpicker-fill').spectrum({
         preferredFormat      : 'rgb',
         //color                : 'rgba(0, 0, 0, 1.0)',
