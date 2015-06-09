@@ -734,6 +734,29 @@
     };
 
     /**
+     * This method gets alpha in the target layer.
+     * @return {number} This is returned as alpha.
+     */
+    ArtCanvas.prototype.getGlobalAlpha = function() {
+        var canvas = this.layers[this.activeLayer];
+        var alpha  = canvas.getGlobalAlpha();
+
+        return alpha;
+    };
+
+    /**
+     * This method sets alpha in the target layer.
+     * @param {number} alpha This argument is between 0 and 1.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.setGlobalAlpha = function(alpha) {
+        var canvas = this.layers[this.activeLayer];
+        canvas.setGlobalAlpha(alpha);
+
+        return this;
+    };
+
+    /**
      * This method is getter for the instance of TextStyle.
      * @return {TextStyle} This is returned as the instance of TextStyle.
      */
@@ -2357,6 +2380,30 @@
 
             if (b >= 0) {
                 this.context.shadowBlur = b;
+                this.draw(true);
+            }
+
+            return this;
+        };
+
+        /**
+         * This method gets alpha.
+         * @return {number} This is returned as alpha.
+         */
+        Canvas.prototype.getGlobalAlpha = function() {
+            return this.context.globalAlpha;
+        };
+
+        /**
+         * This method sets alpha.
+         * @param {number} alpha This argument is between 0 and 1.
+         * @return {Canvas} This is returned for method chain.
+         */
+        Canvas.prototype.setGlobalAlpha = function(alpha) {
+            var a = parseFloat(alpha);
+
+            if ((a >= 0) && (a <= 1)) {
+                this.context.globalAlpha = a;
                 this.draw(true);
             }
 
