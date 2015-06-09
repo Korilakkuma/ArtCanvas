@@ -87,6 +87,12 @@ Getter and Setter for these mode are the following,
     artCanvas.showLayer(layerNumber);
     artCanvas.hideLayer(layerNumber);
   
+#### Alpha (Opacity)
+  
+    var alpha = 0.5;  // This value is number between 0 and 1
+
+    artCanvas.setGlobalAlpha(alpha);
+  
 ### Draw
   
 #### Pen
