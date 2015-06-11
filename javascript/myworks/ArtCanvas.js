@@ -2576,6 +2576,9 @@
 
                     centerX = point.getX() + parseInt(this.context.measureText(text).width / 2);
                     centerY = point.getY() + parseInt(fontSize / 2);
+                } else if (paths instanceof Image) {
+                    centerX = Math.floor(paths.width  / 2);
+                    centerY = Math.floor(paths.height / 2);
                 }
             }
 
