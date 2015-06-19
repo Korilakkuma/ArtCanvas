@@ -989,6 +989,33 @@
     (function() {
 
         /**
+         * This interface defines some methods for drawing.
+         */
+        function Drawable() {
+        }
+
+        /**
+         * This method draws something object.
+         * @param {CanvasRenderingContext2D} context This argumnet is the instance of CanvasRenderingContext2D.
+         */
+        Drawable.prototype.draw = function(context) {
+        };
+
+        /**
+         * This method calculates offset coordinate between the 2 points and creates the instance of Point.
+         * @param {CanvasRenderingContext2D} context This argumnet is the instance of CanvasRenderingContext2D.
+         * @return {Point} This is returned as the instance of Point.
+         */
+        Drawable.prototype.getCenterPoint = function(context) {
+        };
+
+        ArtCanvas.Drawable = Drawable;
+
+    })();
+
+    (function() {
+
+        /**
          * This static class wraps event for drawing.
          */
         function MouseEvents() {
@@ -1267,8 +1294,12 @@
          * @param {number} width This argument is rectangle width.
          * @param {number} height This argument is rectangle height.
          * @constructor
+         * @implements {Drawable}
          */
         function Rectangle(top, left, width, height) {
+            // Call interface constructor
+            ArtCanvas.Drawable.call(this);
+
             this.top    = 0;
             this.left   = 0;
             this.width  = 0;
@@ -1284,6 +1315,10 @@
             if (w >= 0)    {this.width  = w;}
             if (h >= 0)    {this.height = h;}
         }
+
+        /** @implements {Drawable} */
+        Rectangle.prototype = Object.create(ArtCanvas.Drawable.prototype);
+        Rectangle.prototype.constructor = Rectangle;
 
         /**
          * This method is getter for vertical coordinate at upper-left.
@@ -1357,6 +1392,22 @@
             return {width : this.width, height : this.height};
         };
 
+        /** @override */
+        Rectangle.prototype.draw = function(context) {
+            context.beginPath();
+            context.rect(this.top, this.left, this.width, this.height);
+            context.stroke();
+            context.fill();
+        };
+
+        /** @override */
+        Rectangle.prototype.getCenterPoint = function(context) {
+            var centerX = parseInt(this.width  / 2) + this.left;
+            var centerY = parseInt(this.height / 2) + this.top;
+
+            return new ArtCanvas.Point(centerX, centerY);
+        };
+
         ArtCanvas.Rectangle = Rectangle;
 
     })();
@@ -1369,8 +1420,12 @@
          * @param {number} centerY This argument is vertical coordinate of the center.
          * @param {number} radius This argument is circle radius.
          * @constructor
+         * @implements {Drawable}
          */
         function Circle(centerX, centerY, radius) {
+            // Call interface constructor
+            ArtCanvas.Drawable.call(this);
+
             this.centerX = 0;
             this.centerY = 0;
             this.radius  = 0;
@@ -1383,6 +1438,10 @@
             if (!isNaN(cy)) {this.centerY = cy;}
             if (r >= 0)     {this.radius  = r;}
         }
+
+        /** @implements {Drawable} */
+        Circle.prototype = Object.create(ArtCanvas.Drawable.prototype);
+        Circle.prototype.constructor = Circle;
 
         /**
          * This method is getter for horizontal coordinate of the center.
@@ -1416,6 +1475,19 @@
             return this.radius;
         };
 
+        /** @override */
+        Circle.prototype.draw = function(context) {
+            context.beginPath();
+            context.arc(this.centerX, this.centerY, this.radius, 0, (2 * Math.PI), false);
+            context.stroke();
+            context.fill();
+        };
+
+        /** @override */
+        Circle.prototype.getCenterPoint = function(context) {
+            return new ArtCanvas.Point(this.centerX, this.centerY);
+        };
+
         ArtCanvas.Circle = Circle;
 
     })();
@@ -1427,8 +1499,12 @@
          * @param {Point} startPoint This argument is the instance of Point for start point.
          * @param {Point} endPoint This argument is the instance of Point for end point.
          * @constructor
+         * @implements {Drawable}
          */
         function Line(startPoint, endPoint) {
+            // Call interface constructor
+            ArtCanvas.Drawable.call(this);
+
             this.startPoint = null;
             this.endPoint   = null;
 
@@ -1440,6 +1516,10 @@
                 this.endPoint = endPoint;
             }
         };
+
+        /** @implements {Drawable} */
+        Line.prototype = Object.create(ArtCanvas.Drawable.prototype);
+        Line.prototype.constructor = Line;
 
         /**
          * This method is getter for the instance of Point for start point.
@@ -1457,6 +1537,27 @@
             return this.endPoint;
         };
 
+        /** @override */
+        Line.prototype.draw = function(context) {
+            context.beginPath();
+            context.moveTo(this.startPoint.getX(), this.startPoint.getY());
+            context.lineTo(this.endPoint.getX(), this.endPoint.getY());
+            context.stroke();
+        };
+
+        /** @override */
+        Line.prototype.getCenterPoint = function(context) {
+            var minX = Math.min(this.startPoint.x, this.endPoint.x);
+            var minY = Math.min(this.startPoint.y, this.endPoint.y);
+            var maxX = Math.max(this.startPoint.x, this.endPoint.x);
+            var maxY = Math.max(this.startPoint.y, this.endPoint.y);
+
+            var centerX = parseInt(((maxX - minX) / 2) + minX);
+            var centerY = parseInt(((maxY - minY) / 2) + minY);
+
+            return new ArtCanvas.Point(centerX, centerY);
+        };
+
         ArtCanvas.Line = Line;
 
     })();
@@ -1469,8 +1570,12 @@
          * @param {Point} point This argument is the instance of Point for text position.
          * @param {TextStyle} textStyle This argument is the instance of TextStyle.
          * @constructor
+         * @implements {Drawable}
          */
         function Text(text, point, textStyle) {
+            // Call interface constructor
+            ArtCanvas.Drawable.call(this);
+
             this.text      = String(text);
             this.point     = new ArtCanvas.Point(0, 0);
             this.textStyle = null;
@@ -1483,6 +1588,10 @@
                 this.textStyle = textStyle;
             }
         }
+
+        /** @implements {Drawable} */
+        Text.prototype = Object.create(ArtCanvas.Drawable.prototype);
+        Text.prototype.constructor = Text;
 
         /**
          * This method is getter for text that is drawn on canvas.
@@ -1506,6 +1615,31 @@
          */
         Text.prototype.getTextStyle = function() {
             return this.textStyle;
+        };
+
+        /** @override */
+        Text.prototype.draw = function(context) {
+            var font  = this.textStyle.getFont();
+            var color = this.textStyle.getColor();
+
+            var heldColor = context.fillStyle;
+
+            context.font = font.getFontString();
+            context.fillStyle = color;
+            context.fillText(this.text, this.point.getX(), this.point.getY());
+
+            context.fillStyle = heldColor;
+        };
+
+        /** @override */
+        Text.prototype.getCenterPoint = function(context) {
+            var font      = this.textStyle.getFont();
+            var fontSize  = parseInt(font.getSize());
+
+            var centerX = this.point.getX() + parseInt(context.measureText(this.text).width / 2);
+            var centerY = this.point.getY() + parseInt(fontSize / 2);
+
+            return new ArtCanvas.Point(centerX, centerY);
         };
 
         /**
@@ -1587,6 +1721,51 @@
         ArtCanvas.Text      = Text;
         ArtCanvas.TextStyle = TextStyle;
         ArtCanvas.Font      = Font;
+
+    })();
+
+    (function() {
+
+        /**
+         * This class extends Image class.
+         * @param {string} src This argument is image file path.
+         * @param {function} onloadCallback This argument is invoked when image was loaded.
+         * @constructor
+         * @extends {Image}
+         * @implements {Drawable}
+         */
+        function DrawableImage(src, onloadCallback) {
+            // Call interface constructor
+            ArtCanvas.Drawable.call(this);
+
+            this.image     = new Image();
+            this.image.src = src;
+
+            this.image.onload = onloadCallback;
+        }
+
+        /** @extends {Image} */
+        DrawableImage.prototype = Object.create(Image.prototype);
+
+        /** @implements {Drawable} */
+        DrawableImage.prototype = Object.create(ArtCanvas.Drawable.prototype);
+
+        DrawableImage.prototype.constructor = DrawableImage;
+
+        /** @override */
+        DrawableImage.prototype.draw = function(context) {
+            context.drawImage(this.image, 0, 0);
+        };
+
+        /** @override */
+        DrawableImage.prototype.getCenterPoint = function(context) {
+            var centerX = Math.floor(this.image.width  / 2);
+            var centerY = Math.floor(this.image.height / 2);
+
+            return new ArtCanvas.Point(centerX, centerY);
+        };
+
+        ArtCanvas.DrawableImage = DrawableImage;
 
     })();
 
@@ -1989,52 +2168,10 @@
                             this.context.globalCompositeOperation = 'source-over';
                         }
                     }
-                } else if (paths instanceof ArtCanvas.Rectangle) {
-                    var top    = paths.getTop();
-                    var left   = paths.getLeft();
-                    var width  = paths.getWidth();
-                    var height = paths.getHeight();
-
-                    this.context.beginPath();
-                    this.context.rect(top, left, width, height);
-                    this.context.stroke();
-                    this.context.fill();
-                } else if (paths instanceof ArtCanvas.Circle) {
-                    var centerX = paths.getCenterX();
-                    var centerY = paths.getCenterY();
-                    var radius  = paths.getRadius();
-
-                    this.context.beginPath();
-                    this.context.arc(centerX, centerY, radius, 0, (2 * Math.PI), false);
-                    this.context.stroke();
-                    this.context.fill();
-                } else if (paths instanceof ArtCanvas.Line) {
-                    var start = paths.getStartPoint();
-                    var end   = paths.getEndPoint();
-
-                    this.context.beginPath();
-                    this.context.moveTo(start.getX(), start.getY());
-                    this.context.lineTo(end.getX(), end.getY());
-                    this.context.stroke();
-                } else if (paths instanceof ArtCanvas.Text) {
-                    var text      = paths.getText();
-                    var point     = paths.getPoint();
-                    var textStyle = paths.getTextStyle();
-
-                    var font  = textStyle.getFont();
-                    var color = textStyle.getColor();
-
-                    var previousColor = this.context.fillStyle;
-
-                    this.context.font = font.getFontString();
-                    this.context.fillStyle = color;
-                    this.context.fillText(text, point.getX(), point.getY());
-
-                    this.context.fillStyle = previousColor;
-                } else if (paths instanceof Image) {
-                    this.context.drawImage(paths, 0, 0);
                 } else if (paths instanceof ArtCanvas.Filter) {
                     paths.filter(this);
+                } else {
+                    paths.draw(this.context);
                 }
             }
 
@@ -2087,14 +2224,11 @@
          */
         Canvas.prototype.drawImage = function(src) {
             var self  = this;
-            var image = new Image();
 
-            image.src = String(src);
-
-            image.onload = function() {
+            var image = new ArtCanvas.DrawableImage(String(src), function() {
                 self.context.drawImage(this, 0, 0);
-                self.paths.push(this);
-            };
+                self.paths.push(image);
+            });
 
             return this;
         };
@@ -2111,6 +2245,11 @@
             }
 
             var centerPoint = this.getCenterPoint();
+
+            if (centerPoint === null) {
+                return;
+            }
+
             var centerX     = centerPoint.getX();
             var centerY     = centerPoint.getY();
 
@@ -2521,68 +2660,38 @@
          * @return {Point} This is returned as the instance of Point for center point of drawn object.
          */
         Canvas.prototype.getCenterPoint = function() {
-            var centerX = 0;
-            var centerY = 0;
+            var point = null;
 
             for (var i = 0, len = this.paths.length; i < len; i++) {
                 var paths = this.paths[i];
 
-                if (Array.isArray(paths) || (paths instanceof ArtCanvas.Line)) {
+                if (Array.isArray(paths)) {
                     var minX = Number.MAX_VALUE;
                     var minY = Number.MAX_VALUE;
                     var maxX = 0;
                     var maxY = 0;
 
-                    if (Array.isArray(paths)) {
-                        for (var j = 0, num = paths.length; j < num; j++) {
-                            var path = paths[j];
-                            var x    = path.getX();
-                            var y    = path.getY();
+                    for (var j = 0, num = paths.length; j < num; j++) {
+                        var path = paths[j];
+                        var x    = path.getX();
+                        var y    = path.getY();
 
-                            if (x < minX) {minX = x;}
-                            if (y < minY) {minY = y;}
-                            if (x > maxX) {maxX = x;}
-                            if (y > maxY) {maxY = y;}
-                        }
-                    } else if (paths instanceof ArtCanvas.Line) {
-                        var start = paths.getStartPoint();
-                        var end   = paths.getEndPoint();
-
-                        minX = Math.min(start.getX(), end.getX());
-                        minY = Math.min(start.getY(), end.getY());
-                        maxX = Math.max(start.getX(), end.getX());
-                        maxY = Math.max(start.getY(), end.getY());
+                        if (x < minX) {minX = x;}
+                        if (y < minY) {minY = y;}
+                        if (x > maxX) {maxX = x;}
+                        if (y > maxY) {maxY = y;}
                     }
 
-                    centerX = parseInt(((maxX - minX) / 2) + minX);
-                    centerY = parseInt(((maxY - minY) / 2) + minY);
-                } else if (paths instanceof ArtCanvas.Rectangle) {
-                    var left   = paths.getLeft();
-                    var top    = paths.getTop();
-                    var width  = paths.getWidth();
-                    var height = paths.getHeight();
+                    var centerX = parseInt(((maxX - minX) / 2) + minX);
+                    var centerY = parseInt(((maxY - minY) / 2) + minY);
 
-                    centerX = parseInt(width  / 2) + left;
-                    centerY = parseInt(height / 2) + top;
-                } else if (paths instanceof ArtCanvas.Circle) {
-                    centerX = paths.getCenterX();
-                    centerY = paths.getCenterY();
-                } else if (paths instanceof ArtCanvas.Text) {
-                    var text      = paths.getText();
-                    var point     = paths.getPoint();
-                    var textStyle = paths.getTextStyle();
-                    var font      = textStyle.getFont();
-                    var fontSize  = parseInt(font.getSize());
-
-                    centerX = point.getX() + parseInt(this.context.measureText(text).width / 2);
-                    centerY = point.getY() + parseInt(fontSize / 2);
-                } else if (paths instanceof Image) {
-                    centerX = Math.floor(paths.width  / 2);
-                    centerY = Math.floor(paths.height / 2);
+                    point = new ArtCanvas.Point(centerX, centerY);
+                } else {
+                    point = paths.getCenterPoint(this.context);
                 }
             }
 
-            return new ArtCanvas.Point(centerX, centerY);
+            return point;
         };
 
         /**
