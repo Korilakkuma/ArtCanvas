@@ -92,6 +92,12 @@ $(function() {
         });
     });
 
+    $('#button-undo').on(ArtCanvas.MouseEvents.CLICK, function() {
+        if (!artCanvas.undo()) {
+            window.alert('Cannot Undo');
+        }
+    });
+
     $('#number-alpha').change(function() {
         artCanvas.setGlobalAlpha(this.valueAsNumber);
     });
