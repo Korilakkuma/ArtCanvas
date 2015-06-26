@@ -98,6 +98,12 @@ $(function() {
         }
     });
 
+    $('#button-redo').on(ArtCanvas.MouseEvents.CLICK, function() {
+        if (!artCanvas.redo()) {
+            window.alert('Cannot Redo');
+        }
+    });
+
     $('#number-alpha').change(function() {
         artCanvas.setGlobalAlpha(this.valueAsNumber);
     });
