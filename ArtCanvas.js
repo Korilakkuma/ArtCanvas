@@ -90,11 +90,11 @@
                 return;
             }
 
-            var points = activeCanvas.paths.pop();
+            var points = activeCanvas.popPath();
             var point  = points.pop();
 
             points.push(point);
-            activeCanvas.paths.push(points);
+            activeCanvas.pushPath(points);
 
             activeContext.putImageData(imagedata, 0, 0);
 
@@ -110,8 +110,8 @@
                     activeContext.fill();
 
                     if (/mouseup|touchend/i.test(event)) {
-                        activeCanvas.paths.pop();
-                        activeCanvas.paths.push(new ArtCanvas.Rectangle(left, top, offset.getX(), offset.getY()));
+                        activeCanvas.popPath();
+                        activeCanvas.pushPath(new ArtCanvas.Rectangle(left, top, offset.getX(), offset.getY()));
                     }
 
                     break;
@@ -126,8 +126,8 @@
                     activeContext.fill();
 
                     if (/mouseup|touchend/i.test(event)) {
-                        activeCanvas.paths.pop();
-                        activeCanvas.paths.push(new ArtCanvas.Circle(centerX, centerY, radius, 0, (2 * Math.PI), false));
+                        activeCanvas.popPath();
+                        activeCanvas.pushPath(new ArtCanvas.Circle(centerX, centerY, radius, 0, (2 * Math.PI), false));
                     }
 
                     break;
@@ -138,8 +138,8 @@
                     activeContext.stroke();
 
                     if (/mouseup|touchend/i.test(event)) {
-                        activeCanvas.paths.pop();
-                        activeCanvas.paths.push(new ArtCanvas.Line(point, new ArtCanvas.Point(x, y)));
+                        activeCanvas.popPath();
+                        activeCanvas.pushPath(new ArtCanvas.Line(point, new ArtCanvas.Point(x, y)));
                     }
 
                     break;
@@ -155,7 +155,7 @@
          * @param {number} y This argument is relative vertical position in HTMLCanvasElements.
          */
         var _transform = function(activeCanvas, x, y) {
-            var points = activeCanvas.paths.pop();
+            var points = activeCanvas.popPath();
             var point  = points.pop();
             var offset = ArtCanvas.Point.getOffsetPoint(point, new ArtCanvas.Point(x, y));
 
@@ -194,7 +194,7 @@
             activeCanvas.transform(self.transform, amounts);
 
             points.push(point);
-            activeCanvas.paths.push(points);
+            activeCanvas.pushPath(points);
         };
 
         this.container.addEventListener(ArtCanvas.MouseEvents.START, function(event) {
@@ -232,7 +232,7 @@
                     break;
             }
 
-            activeCanvas.paths.push([new ArtCanvas.Point(x, y)]);
+            activeCanvas.pushPath([new ArtCanvas.Point(x, y)]);
 
             isDown = true;
 
@@ -256,7 +256,7 @@
             switch (self.mode) {
                 case ArtCanvas.Mode.HAND   :
                 case ArtCanvas.Mode.ERASER :
-                    var points = activeCanvas.paths.pop();
+                    var points = activeCanvas.popPath();
                     var point  = points.pop();
 
                     activeContext.beginPath();
@@ -277,7 +277,7 @@
                             break;
                     }
 
-                    activeCanvas.paths.push(points);
+                    activeCanvas.pushPath(points);
                     break;
                 case ArtCanvas.Mode.TEXT :
                     break;
@@ -306,7 +306,7 @@
             var y = activeCanvas.getOffsetY(event);
 
             switch (self.mode) {
-                case ArtCanvas.Mode.HAND   :
+                case ArtCanvas.Mode.HAND :
                     break;
                 case ArtCanvas.Mode.ERASER :
                     activeContext.globalCompositeOperation = 'source-over';
@@ -318,13 +318,15 @@
                 case ArtCanvas.Mode.TEXT :
                     break;
                 case ArtCanvas.Mode.TRANSFORM :
-                    activeCanvas.paths.pop();
+                    activeCanvas.popPath();
                     break;
                 default :
                     break;
             }
 
             isDown = false;
+
+            activeCanvas.increaseHistoryPointer();
 
             self.callbacks.drawend(activeCanvas, activeContext, x, y);
         }, true);
@@ -524,6 +526,15 @@
         }
 
         return this;
+    };
+
+    /**
+     * This method executes undo in the target layer.
+     * @return {boolean} If undo is executed, this value is true. Otherwise, this value is false.
+     */
+    ArtCanvas.prototype.undo = function() {
+        var canvas = this.layers[this.activeLayer];
+        return canvas.undo();
     };
 
     /**
@@ -2105,8 +2116,10 @@
             this.context.lineCap     = 'butt';
             this.context.lineJoin    = 'miter';
 
-            /** {@type Array.<Point|Rectangle|Circle|Line|Text>} */
+            /** {@type Array.<Point|Rectangle|Circle|Line|Text|Filter|DrawableImage>} */
             this.paths = [];
+
+            this.historyPointer = 0;
 
             // Transform Matrix
             this.transforms = {
@@ -2134,6 +2147,49 @@
         };
 
         /**
+         * This method is getter for the array that contains drawable objects.
+         * @return {Array.<Point|Rectangle|Circle|Line|Text|Filter|DrawableImage>} This is returned as the array that contains drawable objects.
+         */
+        Canvas.prototype.getPaths = function() {
+            return this.paths;
+        };
+
+        /**
+         * This methods pushes the designated drawable object.
+         * @param {Point|Rectangle|Circle|Line|Text|Filter|DrawableImage} path This argument is drawable object.
+         * @return {Canvas} This is returned for method chain.
+         */
+        Canvas.prototype.pushPath = function(path) {
+            this.paths[this.historyPointer] = path;
+            return this;
+        };
+
+        /**
+         * This method returns the drawable object that is designated by pointer.
+         * @return {Point|Rectangle|Circle|Line|Text|Filter|DrawableImage} This is returned as the drawable object that is designated by pointer.
+         */
+        Canvas.prototype.popPath = function() {
+            return this.paths[this.historyPointer];
+        };
+
+        /**
+         * This method is getter for history position.
+         * @return {number} This is returned as history position.
+         */
+        Canvas.prototype.getHistoryPointer = function() {
+            return this.historyPointer;
+        };
+
+        /**
+         * This method increases history position.
+         * @return {Canvas} This is returned for method chain.
+         */
+        Canvas.prototype.increaseHistoryPointer = function() {
+            this.historyPointer++;
+            return this;
+        };
+
+        /**
          * This method draws all stored objects.
          * @param {boolean} isTransform This argument is to determine whether or not to execute transform.
          * @return {Canvas} This is returned for method chain.
@@ -2143,11 +2199,11 @@
                 this.transform();
             }
 
-            for (var i = 0, len = this.paths.length; i < len; i++) {
+            for (var i = 0; i < this.historyPointer; i++) {
                 var paths = this.paths[i];
 
                 if (Array.isArray(paths)) {
-                    for (var j = 0, num = paths.length; j < num; j++) {
+                    for (var j = 0, len = paths.length; j < len; j++) {
                         var path = paths[j];
                         var x    = path.getX();
                         var y    = path.getY();
@@ -2213,6 +2269,7 @@
             this.context.fillStyle = heldColor;
 
             this.paths.push(new ArtCanvas.Text(text, new ArtCanvas.Point(x, y), textStyle));
+            this.increaseHistoryPointer();
 
             return text;
         };
@@ -2228,6 +2285,7 @@
             var image = new ArtCanvas.DrawableImage(String(src), function() {
                 self.context.drawImage(this, 0, 0);
                 self.paths.push(image);
+                self.historyPointer++;
             });
 
             return this;
@@ -2367,6 +2425,22 @@
         Canvas.prototype.clearPaths = function() {
             this.paths = [];
             return this;
+        };
+
+        /**
+         * This method executes undo.
+         * @return {boolean} If undo is executed, this value is true. Otherwise, this value is false.
+         */
+        Canvas.prototype.undo = function() {
+            if (this.historyPointer > 0) {
+                this.historyPointer--;
+                this.clear();
+                this.draw(true);
+
+                return true;
+            }
+
+            return false;
         };
 
         /**
@@ -2662,7 +2736,7 @@
         Canvas.prototype.getCenterPoint = function() {
             var point = null;
 
-            for (var i = 0, len = this.paths.length; i < len; i++) {
+            for (var i = 0; i < this.historyPointer; i++) {
                 var paths = this.paths[i];
 
                 if (Array.isArray(paths)) {
@@ -2686,7 +2760,7 @@
                     var centerY = parseInt(((maxY - minY) / 2) + minY);
 
                     point = new ArtCanvas.Point(centerX, centerY);
-                } else {
+                } else if (paths instanceof ArtCanvas.Drawable) {
                     point = paths.getCenterPoint(this.context);
                 }
             }
@@ -2898,6 +2972,7 @@
             filter.filter(this);
 
             this.paths.push(filter);
+            this.increaseHistoryPointer();
 
             return this;
         };
