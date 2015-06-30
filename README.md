@@ -145,6 +145,16 @@ In the case of using eraser,
   
     artCanvas.setMode(ArtCanvas.Mode.ERASER);
   
+### Edit
+  
+#### Undo
+  
+    var result = artCanvas.undo();
+
+    if (!result) {
+        // Cannot Undo
+    }
+  
 ### Styles
   
 #### fill style / stroke style
