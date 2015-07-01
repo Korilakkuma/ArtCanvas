@@ -538,6 +538,15 @@
     };
 
     /**
+     * This method executes redo in the target layer.
+     * @return {boolean} If redo is executed, this value is true. Otherwise, this value is false.
+     */
+    ArtCanvas.prototype.redo = function() {
+        var canvas = this.layers[this.activeLayer];
+        return canvas.redo();
+    };
+
+    /**
      * This method gets fill color to HTMLCanvasElement in the target layer.
      * @return {string} This is returned as fill color to HTMLCanvasElement in the target layer.
      */
@@ -2186,6 +2195,12 @@
          */
         Canvas.prototype.increaseHistoryPointer = function() {
             this.historyPointer++;
+
+            // On the way of undo ?
+            if (this.historyPointer < this.paths.length) {
+                this.paths = this.paths.slice(0, this.historyPointer);
+            }
+
             return this;
         };
 
@@ -2434,6 +2449,22 @@
         Canvas.prototype.undo = function() {
             if (this.historyPointer > 0) {
                 this.historyPointer--;
+                this.clear();
+                this.draw(true);
+
+                return true;
+            }
+
+            return false;
+        };
+
+        /**
+         * This method executes redo.
+         * @return {boolean} If redo is executed, this value is true. Otherwise, this value is false.
+         */
+        Canvas.prototype.redo = function() {
+            if (this.historyPointer < this.paths.length) {
+                this.historyPointer++;
                 this.clear();
                 this.draw(true);
 
