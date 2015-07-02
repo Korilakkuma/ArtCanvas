@@ -155,6 +155,14 @@ In the case of using eraser,
         // Cannot Undo
     }
   
+#### Redo
+  
+    var result = artCanvas.redo();
+
+    if (!result) {
+        // Cannot Redo
+    }
+  
 ### Styles
   
 #### fill style / stroke style
