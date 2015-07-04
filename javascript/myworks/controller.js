@@ -104,6 +104,10 @@ $(function() {
         }
     });
 
+    $('#button-clear').on(ArtCanvas.MouseEvents.CLICK, function() {
+        artCanvas.clear();
+    });
+
     $('#number-alpha').change(function() {
         artCanvas.setGlobalAlpha(this.valueAsNumber);
     });
