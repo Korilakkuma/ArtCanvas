@@ -163,6 +163,10 @@ In the case of using eraser,
         // Cannot Redo
     }
   
+#### Clear
+  
+    artCanvas.clear();
+  
 ### Styles
   
 #### fill style / stroke style
