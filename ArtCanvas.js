@@ -547,6 +547,16 @@
     };
 
     /**
+     * This method clears canvas in the target layer.
+     * @return {ArtCanvas} This is returned for method chain.
+     */
+    ArtCanvas.prototype.clear = function() {
+        var canvas = this.layers[this.activeLayer];
+        canvas.clear();
+        return this;
+    };
+
+    /**
      * This method gets fill color to HTMLCanvasElement in the target layer.
      * @return {string} This is returned as fill color to HTMLCanvasElement in the target layer.
      */
