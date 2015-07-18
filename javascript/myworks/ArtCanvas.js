@@ -1016,7 +1016,7 @@
         return this;
     };
 
-    (function() {
+    (function($) {
 
         /**
          * This interface defines some methods for drawing.
@@ -1039,17 +1039,18 @@
         Drawable.prototype.getCenterPoint = function(context) {
         };
 
-        ArtCanvas.Drawable = Drawable;
+        // Export
+        $.Drawable = Drawable;
 
-    })();
+    })(ArtCanvas);
 
-    (function() {
+    (function($) {
 
         /**
          * This static class wraps event for drawing.
          */
         function MouseEvents() {
-        };
+        }
 
         var click = '';
         var start = '';
@@ -1074,11 +1075,12 @@
         MouseEvents.MOVE  = move;
         MouseEvents.END   = end;
 
-        ArtCanvas.MouseEvents = MouseEvents;
+        // Export
+        $.MouseEvents = MouseEvents;
 
-    })();
+    })(ArtCanvas);
 
-    (function() {
+    (function($) {
 
         /**
          * This static class defines strings for representing application status.
@@ -1093,11 +1095,12 @@
         Mode.TOOL      = 'tool';
         Mode.TRANSFORM = 'transform';
 
-        ArtCanvas.Mode = Mode;
+        // Export
+        $.Mode = Mode;
 
-    })();
+    })(ArtCanvas);
 
-    (function() {
+    (function($) {
 
         /**
          * This static class defines strings for drawing figure.
@@ -1109,11 +1112,12 @@
         Figure.CIRCLE    = 'circle';
         Figure.LINE      = 'line';
 
-        ArtCanvas.Figure = Figure;
+        // Export
+        $.Figure = Figure;
 
-    })();
+    })(ArtCanvas);
 
-    (function() {
+    (function($) {
 
         /**
          * This static class defines strings for transforms.
@@ -1125,11 +1129,12 @@
         Transform.SCALE     = 'scale';
         Transform.ROTATE    = 'rotate';
 
-        ArtCanvas.Transform = Transform;
+        // Export
+        $.Transform = Transform;
 
-    })();
+    })(ArtCanvas);
 
-    (function() {
+    (function($) {
 
         /**
          * This static class defines strings for draw tools.
@@ -1140,11 +1145,12 @@
         Tool.DROPPER = 'dropper';
         Tool.BUCKET  = 'bucket';
 
-        ArtCanvas.Tool = Tool;
+        // Export
+        $.Tool = Tool;
 
-    })();
+    })(ArtCanvas);
 
-    (function() {
+    (function($) {
 
         /**
          * This class is to represent color.
@@ -1163,7 +1169,7 @@
             var r = parseInt(red);
             var g = parseInt(green);
             var b = parseInt(blue);
-            var a = parseInt(alpha);
+            var a = parseFloat(alpha);
 
             if (!isNaN(r) && (r >= 0) && (r <= 255)) {
                 this.red = r;
@@ -1241,11 +1247,12 @@
             return hex;
         };
 
-        ArtCanvas.Color = Color;
+        // Export
+        $.Color = Color;
 
-    })();
+    })(ArtCanvas);
 
-    (function() {
+    (function($) {
 
         /**
          * This class is to represent coordinate in the point.
@@ -1311,11 +1318,12 @@
             return Math.sqrt(Math.pow(point.getX(), 2) + Math.pow(point.getY(), 2));
         };
 
-        ArtCanvas.Point = Point;
+        // Export
+        $.Point = Point;
 
-    })();
+    })(ArtCanvas);
 
-    (function() {
+    (function($) {
 
         /**
          * This class is to represent rectangle.
@@ -1432,17 +1440,18 @@
 
         /** @override */
         Rectangle.prototype.getCenterPoint = function(context) {
-            var centerX = parseInt(this.width  / 2) + this.left;
-            var centerY = parseInt(this.height / 2) + this.top;
+            var centerX = (this.width  / 2) + this.left;
+            var centerY = (this.height / 2) + this.top;
 
             return new ArtCanvas.Point(centerX, centerY);
         };
 
-        ArtCanvas.Rectangle = Rectangle;
+        // Export
+        $.Rectangle = Rectangle;
 
-    })();
+    })(ArtCanvas);
 
-    (function() {
+    (function($) {
 
         /**
          * This class is to represent circle.
@@ -1466,7 +1475,7 @@
 
             if (!isNaN(cx)) {this.centerX = cx;}
             if (!isNaN(cy)) {this.centerY = cy;}
-            if (r >= 0)     {this.radius  = r;}
+            if (r >  0)     {this.radius  = r;}
         }
 
         /** @implements {Drawable} */
@@ -1518,11 +1527,12 @@
             return new ArtCanvas.Point(this.centerX, this.centerY);
         };
 
-        ArtCanvas.Circle = Circle;
+        // Export
+        $.Circle = Circle;
 
-    })();
+    })(ArtCanvas);
 
-    (function() {
+    (function($) {
 
         /**
          * This class is to represent line.
@@ -1582,17 +1592,18 @@
             var maxX = Math.max(this.startPoint.x, this.endPoint.x);
             var maxY = Math.max(this.startPoint.y, this.endPoint.y);
 
-            var centerX = parseInt(((maxX - minX) / 2) + minX);
-            var centerY = parseInt(((maxY - minY) / 2) + minY);
+            var centerX = ((maxX - minX) / 2) + minX;
+            var centerY = ((maxY - minY) / 2) + minY;
 
             return new ArtCanvas.Point(centerX, centerY);
         };
 
-        ArtCanvas.Line = Line;
+        // Export
+        $.Line = Line;
 
-    })();
+    })(ArtCanvas);
 
-    (function() {
+    (function($) {
 
         /**
          * This class has properties that are to draw text on canvas.
@@ -1666,8 +1677,8 @@
             var font      = this.textStyle.getFont();
             var fontSize  = parseInt(font.getSize());
 
-            var centerX = this.point.getX() + parseInt(context.measureText(this.text).width / 2);
-            var centerY = this.point.getY() + parseInt(fontSize / 2);
+            var centerX = this.point.getX() + (context.measureText(this.text).width / 2);
+            var centerY = this.point.getY() + (fontSize / 2);
 
             return new ArtCanvas.Point(centerX, centerY);
         };
@@ -1696,7 +1707,7 @@
         };
 
         /**
-         * This method is getter for string for color.
+         * This method is getter for color string.
          * @return {string} This is returned as string for color.
          */
         TextStyle.prototype.getColor = function() {
@@ -1748,13 +1759,19 @@
             return this.style + ' ' + this.size + ' ' + '"' + this.family + '"';
         };
 
-        ArtCanvas.Text      = Text;
-        ArtCanvas.TextStyle = TextStyle;
-        ArtCanvas.Font      = Font;
+        /** @override */
+        Font.prototype.toString = function() {
+            return this.getFontString();
+        };
 
-    })();
+        // Export
+        $.Text      = Text;
+        $.TextStyle = TextStyle;
+        $.Font      = Font;
 
-    (function() {
+    })(ArtCanvas);
+
+    (function($) {
 
         /**
          * This class extends Image class.
@@ -1789,21 +1806,22 @@
 
         /** @override */
         DrawableImage.prototype.getCenterPoint = function(context) {
-            var centerX = Math.floor(this.image.width  / 2);
-            var centerY = Math.floor(this.image.height / 2);
+            var centerX = this.image.width  / 2;
+            var centerY = this.image.height / 2;
 
             return new ArtCanvas.Point(centerX, centerY);
         };
 
-        ArtCanvas.DrawableImage = DrawableImage;
+        // Export
+        $.DrawableImage = DrawableImage;
 
-    })();
+    })(ArtCanvas);
 
-    (function() {
+    (function($) {
 
         /**
          * This class is defined for the feature of eraser.
-         * @param {Point} point This argumnet is the instance of Point
+         * @param {Point} point This argumnet is the instance of Point.
          */
         function Eraser(point) {
             this.point = null;
@@ -1845,11 +1863,12 @@
             }
         };
 
-        ArtCanvas.Eraser = Eraser;
+        // Export
+        $.Eraser = Eraser;
 
-    })();
+    })(ArtCanvas);
 
-    (function() {
+    (function($) {
 
         /**
          * This class is to run image filter.
@@ -1910,7 +1929,7 @@
          * @return {ImageData} This is returned as ImageData of filterd image.
          */
         Filter.prototype.redemphasis = function(input, output) {
-             for (var i = 0., len = input.data.length; i < len; i++) {
+             for (var i = 0, len = input.data.length; i < len; i++) {
                 switch (i % 4) {
                     case 0 :
                         // Operate red color
@@ -2004,10 +2023,10 @@
             }
 
             for (var i = 0; i < n; i++) {
-                var x = Math.floor(Math.random() * width);
-                var y = Math.floor(Math.random() * height);
+                var x = Math.random() * width;
+                var y = Math.random() * height;
 
-                var p = ((y * width) + x) * 4;
+                var p = Math.floor(((y * width) + x) * 4);
 
                 var r = input.data[p + 0] >> 1;
                 var g = input.data[p + 1] >> 2;
@@ -2072,19 +2091,25 @@
          * @return {Filter} This is returned for method chain.
          */
         Filter.prototype.filter = function(canvas) {
-            var input  = canvas.context.getImageData(0, 0, canvas.canvas.width, canvas.canvas.height);
-            var output = canvas.context.createImageData(canvas.canvas.width, canvas.canvas.height);
+            if (!(canvas instanceof $.Canvas)) {
+                return this;
+            }
+
+            var context = canvas.getContext();
+            var input   = context.getImageData(0, 0, canvas.canvas.width, canvas.canvas.height);
+            var output  = context.createImageData(canvas.canvas.width, canvas.canvas.height);
 
             canvas.context.putImageData(this[this.type](input, output), 0, 0);
 
             return this;
         };
 
-        ArtCanvas.Filter = Filter;
+        // Export
+        $.Filter = Filter;
 
-    })();
+    })(ArtCanvas);
 
-    (function() {
+    (function($) {
 
         /**
          * This class has properties to draw on each layer.
@@ -2151,7 +2176,7 @@
 
         /**
          * This method is getter for the instance of HTMLCanvasElement.
-         * @return {HTMLCanvasElement} This is returned as the instance of HTMLCanvasElement
+         * @return {HTMLCanvasElement} This is returned as the instance of HTMLCanvasElement.
          */
         Canvas.prototype.getCanvas = function() {
             return this.canvas;
@@ -2493,7 +2518,7 @@
         };
 
         /**
-         * This method sets fill color..
+         * This method sets fill color.
          * @param {string} fillStyle This argument is string for color.
          * @return {Canvas} This is returned for method chain.
          */
@@ -2513,7 +2538,7 @@
         };
 
         /**
-         * This method sets stroke color..
+         * This method sets stroke color.
          * @param {string} strokeStyle This argument is string for color.
          * @return {Canvas} This is returned for method chain.
          */
@@ -2525,7 +2550,7 @@
         };
 
         /**
-         * This method gets line width
+         * This method gets line width.
          * @return {number} This is returned as line width.
          */
         Canvas.prototype.getLineWidth = function() {
@@ -2541,7 +2566,7 @@
             var w = parseFloat(lineWidth);
 
             if (w > 0) {
-                this.context.lineWidth= w;
+                this.context.lineWidth = w;
                 this.draw(true);
             }
 
@@ -2641,30 +2666,6 @@
         };
 
         /**
-         * This method gets alpha.
-         * @return {number} This is returned as alpha.
-         */
-        Canvas.prototype.getGlobalAlpha = function() {
-            return this.context.globalAlpha;
-        };
-
-        /**
-         * This method sets alpha.
-         * @param {number} alpha This argument is between 0 and 1.
-         * @return {Canvas} This is returned for method chain.
-         */
-        Canvas.prototype.setGlobalAlpha = function(alpha) {
-            var a = parseFloat(alpha);
-
-            if ((a >= 0) && (a <= 1)) {
-                this.context.globalAlpha = a;
-                this.draw(true);
-            }
-
-            return this;
-        };
-
-        /**
          * This method gets horizontal shadow offset.
          * @return {number} This is returned as horizontal shadow offset.
          */
@@ -2706,6 +2707,30 @@
 
             if (!isNaN(y)) {
                 this.context.shadowOffsetY = y;
+                this.draw(true);
+            }
+
+            return this;
+        };
+
+        /**
+         * This method gets (global) alpha.
+         * @return {number} This is returned as (global) alpha.
+         */
+        Canvas.prototype.getGlobalAlpha = function() {
+            return this.context.globalAlpha;
+        };
+
+        /**
+         * This method sets (global) alpha.
+         * @param {number} alpha This argument is between 0 and 1.
+         * @return {Canvas} This is returned for method chain.
+         */
+        Canvas.prototype.setGlobalAlpha = function(alpha) {
+            var a = parseFloat(alpha);
+
+            if ((a >= 0) && (a <= 1)) {
+                this.context.globalAlpha = a;
                 this.draw(true);
             }
 
@@ -2797,8 +2822,8 @@
                         if (y > maxY) {maxY = y;}
                     }
 
-                    var centerX = parseInt(((maxX - minX) / 2) + minX);
-                    var centerY = parseInt(((maxY - minY) / 2) + minY);
+                    var centerX = ((maxX - minX) / 2) + minX;
+                    var centerY = ((maxY - minY) / 2) + minY;
 
                     point = new ArtCanvas.Point(centerX, centerY);
                 } else if (paths instanceof ArtCanvas.Drawable) {
@@ -3018,9 +3043,10 @@
             return this;
         };
 
-        ArtCanvas.Canvas = Canvas;
+        // Export
+        $.Canvas = Canvas;
 
-    })();
+    })(ArtCanvas);
 
     // Export
     global.ArtCanvas = ArtCanvas;
