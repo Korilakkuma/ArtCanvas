@@ -36,10 +36,11 @@ $(function() {
 
     var setTextStyle = function() {
         var fontFamily = $('#select-font-family').val();
-        var fontStyle  = $('#select-font-style').val();
         var fontSize   = $('#number-font-size').val() + 'px';
+        var fontStyle  = $('#select-font-style').val();
+        var fontWeight = $('#select-font-weight').val();
 
-        var font  = new ArtCanvas.Font(fontFamily, fontStyle, fontSize);
+        var font = new ArtCanvas.Font(fontFamily, fontSize, fontStyle, fontWeight);
 
         var tinycolor = $('#colorpicker-text').spectrum('get');
         var color       = tinycolor.toRgbString();
@@ -198,7 +199,7 @@ $(function() {
         }
     });
 
-    $('#select-font-family, #select-font-style, #number-font-size').change(function() {
+    $('#select-font-family, #number-font-size, #select-font-style, #select-font-weight').change(function() {
         setTextStyle();
     });
 
