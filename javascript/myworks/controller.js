@@ -14,24 +14,18 @@ $(function() {
 
     var artCanvas = new ArtCanvas(container, canvas, WIDTH, HEIGHT);
 
+    var addLayer = function(activeLayer) {
+        var dd = $('<dd />').append('<input type="checkbox" value="' + activeLayer + '" checked />')
+                            .append('<label><input type="radio" name="radio-layer" value="' + activeLayer + '" checked />Layer ' + (activeLayer + 1) + '</label>')
+                            .append('<button type="button" class="button-remove-layer">Remove</button>');
+
+        $('#button-add-layer').parent('dd').after(dd);
+    };
+
     var callbacks = {
         drawstart   : function() {},
         drawmove    : function() {},
-        drawend     : function() {},
-        changemode  : function() {
-            
-        },
-        selectlayer : function() {},
-        showlayer   : function() {},
-        hidelayer   : function() {},
-        addlayer    : function(activeCanvas, activeLayer) {
-            var dd = $('<dd />').append('<input type="checkbox" value="' + activeLayer + '" checked />')
-                                .append('<label><input type="radio" name="radio-layer" value="' + activeLayer + '" checked />Layer ' + (activeLayer + 1) + '</label>')
-                                .append('<button type="button" class="button-remove-layer">Remove</button>');
-
-            $('#button-add-layer').parent('dd').after(dd);
-        },
-        removelayer : function() {}
+        drawend     : function() {}
     };
 
     var setTextStyle = function() {
@@ -66,6 +60,7 @@ $(function() {
 
     $('#button-add-layer').on(ArtCanvas.MouseEvents.CLICK, function() {
         artCanvas.addLayer(WIDTH, HEIGHT);
+        addLayer(artCanvas.getActiveLayer());
     });
 
     $('[name="form-layer"]').on( ArtCanvas.MouseEvents.CLICK, '.button-remove-layer', function() {
@@ -194,6 +189,7 @@ $(function() {
     $('#checkbox-text-mode').on(ArtCanvas.MouseEvents.CLICK, function() {
         if (this.checked) {
             artCanvas.setMode(ArtCanvas.Mode.TEXT);
+            addLayer(artCanvas.getActiveLayer());
         } else {
             artCanvas.setMode(ArtCanvas.Mode.HAND);
         }
