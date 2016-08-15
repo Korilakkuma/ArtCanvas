@@ -1,5 +1,7 @@
-ArtCanvas.js
+ArtCanvas
 =========
+  
+[![Build Status](https://travis-ci.org/Korilakkuma/ArtCanvas.svg?branch=master)](https://travis-ci.org/Korilakkuma/ArtCanvas)
   
 HTML5 Canvas Library
   
@@ -9,7 +11,7 @@ This library enables to create image authoring application like Photoshop.
 In concrete, this library may be useful to implement the following features.
   
 * Layer
-* Draw (Pen, Figure, Text ..etc)
+* Draw (Pen, Figure, Text ...etc)
 * Styles (Color, Line Width, Text Styles ...etc)
 * Transforms (Translate, Scale, Rotate)
 * Tools for drawing
@@ -18,11 +20,23 @@ In concrete, this library may be useful to implement the following features.
   
 * [Art Canvas](http://korilakkuma.github.io/ArtCanvas/)
   
+## Installation
+  
+    $ npm install art-canvas
+  
+or,
+  
+    $ bower install art-canvas
+  
 ## Usage
   
 The 1st, ArtCanvas class is required.
   
     <script type="text/javascript" src="ArtCanvas.js"></script>
+  
+or,
+  
+    <script type="text/javascript" src="ArtCanvas.min.js"></script>
   
 Next, the instance of ArtCanvas must be created.  
 ArtCanvas constructor requires 4 arguments.  
@@ -173,35 +187,41 @@ In the case of using eraser,
   
 It is required that color string (hex, rgb, hsl, rgba, hsla ...etc) is designated for fill style and stroke style.
   
-    artCanvas.setFillStyle('rgba(0, 0, 255, 1.0)');    // fill style
-    artCanvas.setStrokeStyle('rgba(255, 0, 0, 1.0)');  // stroke style
+    var redraw = true;
+
+    artCanvas.setFillStyle('rgba(0, 0, 255, 1.0)', redraw);    // fill style
+    artCanvas.setStrokeStyle('rgba(255, 0, 0, 1.0)', redraw);  // stroke style
   
 #### line width
   
     var lineWidth = 3;  // This value is greater than 0
+    var redraw    = true;
 
-    artCanvas.setLineWidth(lineWidth);
+    artCanvas.setLineWidth(lineWidth, redraw);
   
 #### line cap
   
     var lineCap = 'round';  // one of 'butt', 'round', 'square'
+    var redraw  = true;
 
-    artCanvas.setLineCap(lineCap);
+    artCanvas.setLineCap(lineCap, redraw);
   
 #### line join
   
     var lineJoin = 'round';  // one of 'bevel', 'round', 'miter'
+    var redraw   = true;
 
-    artCanvas.setLineJoin(lineCap);
+    artCanvas.setLineJoin(lineJoin, redraw);
   
 #### Text style
   
     var fontFamily = 'Helvetica';
+    var fontSize   = '24px';
     var fontStyle  = 'oblique';
-    var fontSize   = '24px'
+    var fontWeight = 'bold';
 
     // Create the instance of ArtCanvas.Font
-    var font = new ArtCanvas.Font(fontFamily, fontStyle, fontSize);
+    var font = new ArtCanvas.Font(fontFamily, fontSize, fontStyle, fontWeight);
 
     // color string (hex, rgb, hsl, rgba, hsla ...etc)
     var color = 'rgba(153, 153, 153, 1.0)';
@@ -215,11 +235,12 @@ It is required that color string (hex, rgb, hsl, rgba, hsla ...etc) is designate
     var shadowBlur    = 3;                     // This value is greater than or equal to 0.
     var shadowOffsetX = -3;
     var shadowOffsetY = -3;
+    var redraw        = true;
 
-    artCanvas.setShadowColor(shadowColor);
-    artCanvas.setShadowBlur(shadowBlur);
-    artCanvas.setShadowOffsetX(shadowOffsetX);
-    artCanvas.setShadowOffsetY(shadowOffsetY);
+    artCanvas.setShadowColor(shadowColor, redraw);
+    artCanvas.setShadowBlur(shadowBlur, redraw);
+    artCanvas.setShadowOffsetX(shadowOffsetX, redraw);
+    artCanvas.setShadowOffsetY(shadowOffsetY, redraw);
   
 ### Transforms
   
@@ -284,4 +305,9 @@ Next, it is required to designate transform type.
     };
 
     artCanvas.export(format, callback);
+  
+## License
+  
+Copyright (c) 2012, 2013, 2014 Tomohiro IKEDA (Korilakkuma)  
+Released under the MIT license
   
