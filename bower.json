@@ -1,0 +1,21 @@
+{
+  "name": "art-canvas",
+  "version": "2.0.0",
+  "homepage": "https://github.com/Korilakkuma/ArtCanvas",
+  "authors": [
+    "Korilakkuma <rilakkuma.san.xjapan@gmail.com>"
+  ],
+  "description": "HTML5 Canvas Library",
+  "main": "build/ArtCanvas.min.js",
+  "keywords": [
+    "ArtCanvas.js",
+    "ArtCanvas",
+    "JavaScript",
+    "HTML5",
+    "Canvas",
+    "Library"
+  ],
+  "license": "MIT",
+  "ignore" : [
+  ]
+}
